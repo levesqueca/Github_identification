@@ -2,11 +2,16 @@ library(Biostrings)
 # library(BSgenome)
 
 # folder where fasta file is (there should be only one)
-ID_Folder <- "Myron_ITS"
+ID_Folder <- "Cacao_ITS"
 
 # finds fasta files
 ID_fasta_files <- list.files(path = ID_Folder, pattern = "\\.fas$|\\.fasta$", recursive = FALSE)
 #ID_fasta_files <- list.files(path = ID_Folder, pattern = "fasta\\.fasta$", recursive = FALSE)
+
+# Pick the right file(s)
+ID_fasta_files
+ID_fasta_files  <- ID_fasta_files[c(3)]
+ID_fasta_files
 
 # makes a linsi command from this file with reorientation
 # cmd <- paste("/opt/bio/mafft/bin/linsi --adjustdirection --auto --reorder ",  ID_Folder, "/", ID_fasta_files, " > ", ID_Folder, "/", "query_aligned_fasta.fasta", sep = "")
@@ -47,7 +52,7 @@ fit <- hclust(dm, method="average")
 
 # Number of groups based on NJ tree
 
-num_clades <- 10
+num_clades <- 3
 
 groups <-  cutree(fit, num_clades)
 group2 <- data.frame(names(groups), groups)
@@ -61,7 +66,7 @@ seq_length <- data.frame(names(seq_no_gaps), sapply(seq_no_gaps, length))
 
 seq_gr_len <- merge(seq_length, group2, by.x = "names.seq_no_gaps.", by.y = "names.groups.")
 
-
+######################################
 
 unique_ID <- names(groups[!duplicated(groups)])
 
@@ -106,14 +111,15 @@ GB_Blast_table <- data.frame(parsed_col[,4],GB_Blast_table, stringsAsFactors = F
 colnames(GB_Blast_table)[1] <- "GB_accession"
 
 
-unique(GB_Blast_table$GB_accession)
+unique_GB <- unique(GB_Blast_table$GB_accession)
 
+unique_GB <- sub("\\.0|\\.1|\\.2|\\.3|\\.4|\\.5)", "", unique(GB_Blast_table$GB_accession), ignore.case = FALSE, perl = FALSE)
+                
 
-
+sequences <- read.GenBank(unique_GB, seq.names = unique_GB,  species.names = TRUE,gene.names = FALSE,  as.character = TRUE)
 
 sequences <- read.GenBank(unique(GB_Blast_table$GB_accession),  seq.names = unique(GB_Blast_table$GB_accession),
-                          species.names = TRUE,gene.names = FALSE,  as.character = TRUE)
-
+               
 bad <- read.GenBank("AB217667.1",  seq.names = "AB217667.1",
                           species.names = TRUE,gene.names = FALSE,  as.character = TRUE)
 GB_DNAstring[8]
@@ -264,8 +270,8 @@ alignment_file2 <- paste(ID_Folder, "/All_files_aligned.fasta", sep="")
 # rownames(align) <- sub(".seq", ".seq <<<<<<<<<<",rownames(align), ignore.case = FALSE)
 # rownames(align) <- sub("_AY598", " REFERENCE STRAIN_AY598",rownames(align), ignore.case = FALSE)
 
-rownames(align) <- sub("^UWI", ">>>>>>>>>> UWI",rownames(align), ignore.case = FALSE)
-rownames(align) <- sub("PF$", "PF <<<<<<<<<<",rownames(align), ignore.case = FALSE)
+rownames(align) <- sub("^Lev", ">>>>>>>>>> Lev",rownames(align), ignore.case = FALSE)
+#rownames(align) <- sub("PF$", "PF <<<<<<<<<<",rownames(align), ignore.case = FALSE)
 
   
   # raw distance is p-distance with substitution -> d: transition + transversion
@@ -273,13 +279,16 @@ rownames(align) <- sub("PF$", "PF <<<<<<<<<<",rownames(align), ignore.case = FAL
   
   MaxV <- max(rowSums(dm))
 
-  my_root <- which(rowSums(dm) == MaxV)
-
+# this is to get the root of the tree with the most distant species
+#  my_root <- which(rowSums(dm) == MaxV)
+# If this is a query sequence because of errors, this is a way to customize the choice based on GenBank number
+  my_root <- grep("GU997621",rownames(align))
+ 
   dm <- dist.dna(align, model = "raw", pairwise.deletion = FALSE, as.matrix = TRUE)
 
   tree <- njs(dm)
 
-write.tree(tree, file = paste(ID_Folder, "/nj_tree.newick", sep="", append = FALSE, digits = 10, tree.names = FALSE)
+write.tree(tree, file = paste(ID_Folder, "/nj_tree.newick", sep=""), append = FALSE, digits = 10, tree.names = FALSE)
 
   
   # plot(max(unmatrix(dm, byrow = TRUE)), type="h")
@@ -296,11 +305,6 @@ write.tree(tree, file = paste(ID_Folder, "/nj_tree.newick", sep="", append = FAL
   title(main="NJ", outer=FALSE, cex.main=1, font.main=2)
   dev.off()   
   
-  #write fasta file
-  write.dna(align_subset, file=paste(genes[ii], "/alignment_rev_names_codes_subset.fasta", sep = ""), format = "fasta")
-  
-  
-}
 
 
 
