@@ -2,7 +2,7 @@ library(Biostrings)
 # library(BSgenome)
 
 # folder where fasta file is (there should be only one)
-ID_Folder <- "Cacao_ITS"
+ID_Folder <- "Cacao_Cox1"
 
 # finds fasta files
 ID_fasta_files <- list.files(path = ID_Folder, pattern = "\\.fas$|\\.fasta$", recursive = FALSE)
@@ -10,7 +10,7 @@ ID_fasta_files <- list.files(path = ID_Folder, pattern = "\\.fas$|\\.fasta$", re
 
 # Pick the right file(s)
 ID_fasta_files
-ID_fasta_files  <- ID_fasta_files[c(3)]
+ID_fasta_files  <- ID_fasta_files[c(1)]
 ID_fasta_files
 
 # makes a linsi command from this file with reorientation
@@ -52,7 +52,7 @@ fit <- hclust(dm, method="average")
 
 # Number of groups based on NJ tree
 
-num_clades <- 3
+num_clades <- 2
 
 groups <-  cutree(fit, num_clades)
 group2 <- data.frame(names(groups), groups)
@@ -85,7 +85,7 @@ for(i in 1:nrow(fasta_for_GenBank)) {
 
 
 j <- 1
-
+# runs BLAST on Biocluster server
 for(j in 1:nrow(fasta_for_GenBank)) {
 cmd2 <- paste("/opt/bio/ncbi/bin/blastall -p blastn -d /isilon/biodiversity/reference/ncbi/blastdb/reference/nt/nt -i ", ID_Folder, "/GenBank/",
               rownames(fasta_for_GenBank)[j], ".fasta -e 10 -m 8 -v 250 -b 250 -F F -o ", ID_Folder, "/GenBank/", rownames(fasta_for_GenBank)[j], ".out", sep="")
@@ -96,7 +96,7 @@ system(cmd2)
 k <- 1
 
 GB_Blast_table <- data.frame()
-
+# reads and consolitdates BLAST outputs
 for(k in 1:nrow(fasta_for_GenBank)) {
 temp <- read.table(paste(ID_Folder, "/GenBank/", rownames(fasta_for_GenBank)[k], ".out", sep=""),header=FALSE)
 GB_Blast_table <- rbind(GB_Blast_table, temp)
@@ -113,20 +113,21 @@ colnames(GB_Blast_table)[1] <- "GB_accession"
 
 unique_GB <- unique(GB_Blast_table$GB_accession)
 
+# removes the decimal points on GenBank accessions as these caused a faiolure to retrieve files
 unique_GB <- sub("\\.0|\\.1|\\.2|\\.3|\\.4|\\.5)", "", unique(GB_Blast_table$GB_accession), ignore.case = FALSE, perl = FALSE)
                 
 
 sequences <- read.GenBank(unique_GB, seq.names = unique_GB,  species.names = TRUE,gene.names = FALSE,  as.character = TRUE)
 
-sequences <- read.GenBank(unique(GB_Blast_table$GB_accession),  seq.names = unique(GB_Blast_table$GB_accession),
-               
-bad <- read.GenBank("AB217667.1",  seq.names = "AB217667.1",
-                          species.names = TRUE,gene.names = FALSE,  as.character = TRUE)
-GB_DNAstring[8]
-
-
-sequences[[1]]
-names(sequences)[1]
+# sequences <- read.GenBank(unique(GB_Blast_table$GB_accession),  seq.names = unique(GB_Blast_table$GB_accession),
+#                
+# bad <- read.GenBank("AB217667.1",  seq.names = "AB217667.1",
+#                           species.names = TRUE,gene.names = FALSE,  as.character = TRUE)
+# GB_DNAstring[8]
+# 
+# 
+# sequences[[1]]
+# names(sequences)[1]
 
 sequences_ord <- sequences[order(names(sequences))] 
 
@@ -229,12 +230,14 @@ for(i in 1:length(x_trim)) {
 #show outliers
 mean_length <- mean(width(x_trim))
 #Calculate a confidence interval
-Conf_interv <- 2*sd(width(x_trim))
+Conf_interv <- 5*sd(width(x_trim))
 #show the sequences that will be removed
 x_trim[ (width(x_trim) > mean_length + 2*Conf_interv | width(x_trim) < mean_length - 0.5*Conf_interv) , ]
 #create the file without the outliers
 xtrim_no_outliers <- x_trim[!(width(x_trim) > mean_length + 2*Conf_interv | 
                                 width(x_trim) < mean_length - 0.5*Conf_interv), ]
+
+length(xtrim_no_outliers) 
 
 # write fasta file of trimmed sequences
 writeXStringSet(xtrim_no_outliers, file=paste(ID_Folder, "/GB_csv_extracted.fasta", sep=""), append=FALSE, format="fasta") 
@@ -282,7 +285,7 @@ rownames(align) <- sub("^Lev", ">>>>>>>>>> Lev",rownames(align), ignore.case = F
 # this is to get the root of the tree with the most distant species
 #  my_root <- which(rowSums(dm) == MaxV)
 # If this is a query sequence because of errors, this is a way to customize the choice based on GenBank number
-  my_root <- grep("GU997621",rownames(align))
+  my_root <- grep("HQ012866",rownames(align))
  
   dm <- dist.dna(align, model = "raw", pairwise.deletion = FALSE, as.matrix = TRUE)
 
@@ -296,7 +299,7 @@ write.tree(tree, file = paste(ID_Folder, "/nj_tree.newick", sep=""), append = FA
   nrow(dm)
   # write.table(dm, file = "dm.csv", append = FALSE, sep = ",", col.names = NA)
   
-  pdf(file = paste(ID_Folder, "/NJ_bionj_K80_tree_GebBank_and_ID_trimmed.pdf", sep=""), width = 8, height =14 )
+  pdf(file = paste(ID_Folder, "/NJ_bionj_K80_tree_GenBank_and_ID_trimmed.pdf", sep=""), width = 8, height =14 )
   # "0.5-((nrow(dm)-50)/500)" is a rough equation to remove 0.1 to cex factor for every 50 taxa to keep font size small enough for larger data
   # if you want to have longer branches, reduce x.lim by 0.1 increments
   #plot.phylo(type = "phylogram", root(tree, root[i], node = NULL, resolve.root = TRUE), font=1, cex = 0.5,  x.lim = 0.7)
