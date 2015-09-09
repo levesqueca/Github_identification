@@ -1,8 +1,9 @@
 library(Biostrings)
+library("xlsx")
 # library(BSgenome)
 
 # folder where fasta file is (there should be only one)
-ID_Folder <- "Cacao_Cox1"
+ID_Folder <- "Pythium_France"
 
 # finds fasta files
 ID_fasta_files <- list.files(path = ID_Folder, pattern = "\\.fas$|\\.fasta$", recursive = FALSE)
@@ -52,7 +53,7 @@ fit <- hclust(dm, method="average")
 
 # Number of groups based on NJ tree
 
-num_clades <- 2
+num_clades <- 3
 
 groups <-  cutree(fit, num_clades)
 group2 <- data.frame(names(groups), groups)
@@ -269,11 +270,11 @@ alignment_file2 <- paste(ID_Folder, "/All_files_aligned.fasta", sep="")
 #   align_subset <- align[lines,]
  
 
-# rownames(align) <- sub("NFIS", ">>>>>>>>>> NFIS",rownames(align), ignore.case = FALSE)
-# rownames(align) <- sub(".seq", ".seq <<<<<<<<<<",rownames(align), ignore.case = FALSE)
+rownames(align) <- sub("NFIS", ">>>>>>>>>> NFIS",rownames(align), ignore.case = FALSE)
+rownames(align) <- sub(".seq", ".seq <<<<<<<<<<",rownames(align), ignore.case = FALSE)
 # rownames(align) <- sub("_AY598", " REFERENCE STRAIN_AY598",rownames(align), ignore.case = FALSE)
 
-rownames(align) <- sub("^Lev", ">>>>>>>>>> Lev",rownames(align), ignore.case = FALSE)
+#rownames(align) <- sub("^Lev", ">>>>>>>>>> Lev",rownames(align), ignore.case = FALSE)
 #rownames(align) <- sub("PF$", "PF <<<<<<<<<<",rownames(align), ignore.case = FALSE)
 
   
@@ -283,9 +284,9 @@ rownames(align) <- sub("^Lev", ">>>>>>>>>> Lev",rownames(align), ignore.case = F
   MaxV <- max(rowSums(dm))
 
 # this is to get the root of the tree with the most distant species
-#  my_root <- which(rowSums(dm) == MaxV)
+  my_root <- which(rowSums(dm) == MaxV)
 # If this is a query sequence because of errors, this is a way to customize the choice based on GenBank number
-  my_root <- grep("HQ012866",rownames(align))
+#  my_root <- grep("HQ012866",rownames(align))
  
   dm <- dist.dna(align, model = "raw", pairwise.deletion = FALSE, as.matrix = TRUE)
 
