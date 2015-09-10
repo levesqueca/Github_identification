@@ -3,7 +3,7 @@ library("xlsx")
 # library(BSgenome)
 
 # folder where fasta file is (there should be only one)
-ID_Folder <- "Pythium_France"
+ID_Folder <- "Pythium_ultimum_Quinn"
 
 # finds fasta files
 ID_fasta_files <- list.files(path = ID_Folder, pattern = "\\.fas$|\\.fasta$", recursive = FALSE)
@@ -53,7 +53,7 @@ fit <- hclust(dm, method="average")
 
 # Number of groups based on NJ tree
 
-num_clades <- 3
+num_clades <- 6
 
 groups <-  cutree(fit, num_clades)
 group2 <- data.frame(names(groups), groups)
@@ -231,9 +231,9 @@ for(i in 1:length(x_trim)) {
 #show outliers
 mean_length <- mean(width(x_trim))
 #Calculate a confidence interval
-Conf_interv <- 5*sd(width(x_trim))
+Conf_interv <- 2*sd(width(x_trim))
 #show the sequences that will be removed
-x_trim[ (width(x_trim) > mean_length + 2*Conf_interv | width(x_trim) < mean_length - 0.5*Conf_interv) , ]
+x_trim[ (width(x_trim) > mean_length + 5*Conf_interv | width(x_trim) < mean_length - 0.5*Conf_interv) , ]
 #create the file without the outliers
 xtrim_no_outliers <- x_trim[!(width(x_trim) > mean_length + 2*Conf_interv | 
                                 width(x_trim) < mean_length - 0.5*Conf_interv), ]
