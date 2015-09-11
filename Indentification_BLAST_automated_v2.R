@@ -3,7 +3,7 @@ library("xlsx")
 # library(BSgenome)
 
 # folder where fasta file is (there should be only one)
-ID_Folder <- "Pythium_ultimum_Quinn"
+ID_Folder <- "Pythium_ultimum_Quinn_Cox1"
 
 # finds fasta files
 ID_fasta_files <- list.files(path = ID_Folder, pattern = "\\.fas$|\\.fasta$", recursive = FALSE)
@@ -27,8 +27,8 @@ system(cmd)
 #####################
 #  Need a script to trim the alignment automatically.  Currently doing alignment trimming by hand
 
-temp <- readDNAStringSet(paste(ID_Folder, "/", "query_aligned_fasta.fasta", sep =""))
-mat <- t(consensusMatrix(temp, baseOnly=TRUE))
+# temp <- readDNAStringSet(paste(ID_Folder, "/", "query_aligned_fasta.fasta", sep =""))
+# mat <- t(consensusMatrix(temp, baseOnly=TRUE))
 
 #######################
 
@@ -53,7 +53,7 @@ fit <- hclust(dm, method="average")
 
 # Number of groups based on NJ tree
 
-num_clades <- 6
+num_clades <- 8
 
 groups <-  cutree(fit, num_clades)
 group2 <- data.frame(names(groups), groups)
