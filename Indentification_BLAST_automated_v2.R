@@ -3,7 +3,7 @@ library("xlsx")
 # library(BSgenome)
 
 # folder where fasta file is (there should be only one)
-ID_Folder <- "Pythium_ultimum_Quinn_Cox1"
+ID_Folder <- "Pythium_ultimum_Quinn_Btub"
 
 # finds fasta files
 ID_fasta_files <- list.files(path = ID_Folder, pattern = "\\.fas$|\\.fasta$", recursive = FALSE)
@@ -53,7 +53,7 @@ fit <- hclust(dm, method="average")
 
 # Number of groups based on NJ tree
 
-num_clades <- 8
+num_clades <- 5
 
 groups <-  cutree(fit, num_clades)
 group2 <- data.frame(names(groups), groups)
@@ -270,8 +270,8 @@ alignment_file2 <- paste(ID_Folder, "/All_files_aligned.fasta", sep="")
 #   align_subset <- align[lines,]
  
 
-rownames(align) <- sub("NFIS", ">>>>>>>>>> NFIS",rownames(align), ignore.case = FALSE)
-rownames(align) <- sub(".seq", ".seq <<<<<<<<<<",rownames(align), ignore.case = FALSE)
+#rownames(align) <- sub("NFIS", ">>>>>>>>>> NFIS",rownames(align), ignore.case = FALSE)
+#rownames(align) <- sub(".seq", ".seq <<<<<<<<<<",rownames(align), ignore.case = FALSE)
 # rownames(align) <- sub("_AY598", " REFERENCE STRAIN_AY598",rownames(align), ignore.case = FALSE)
 
 #rownames(align) <- sub("^Lev", ">>>>>>>>>> Lev",rownames(align), ignore.case = FALSE)
