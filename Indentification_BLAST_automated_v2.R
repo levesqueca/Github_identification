@@ -3,7 +3,7 @@ library("xlsx")
 # library(BSgenome)
 
 # folder where fasta file is (there should be only one)
-ID_Folder <- "Pythium_ultimum_Quinn_Btub"
+ID_Folder <- "Mounira"
 
 # finds fasta files
 ID_fasta_files <- list.files(path = ID_Folder, pattern = "\\.fas$|\\.fasta$", recursive = FALSE)
@@ -18,14 +18,14 @@ ID_fasta_files
 # cmd <- paste("/opt/bio/mafft/bin/linsi --adjustdirection --auto --reorder ",  ID_Folder, "/", ID_fasta_files, " > ", ID_Folder, "/", "query_aligned_fasta.fasta", sep = "")
 
 # makes a linsi command from this file without  reorientation
-cmd <- paste("/opt/bio/mafft/bin/linsi --reorder ",  ID_Folder, "/", ID_fasta_files, " > ", ID_Folder, "/", "query_aligned_fasta.fasta", sep = "")
+cmd <- paste("/opt/bio/mafft/bin/linsi --reorder '",  ID_Folder, "/", ID_fasta_files, "' > ", ID_Folder, "/", "query_aligned_fasta.fasta", sep = "")
 
 
 # runs the command on the linux server
 system(cmd)
 
 #####################
-#  Need a script to trim the alignment automatically.  Currently doing alignment trimming by hand
+#  Need a script to trim the alignment automatically.  Currently doing alignment trimming of query_aligned_fasta.fasta by hand
 
 # temp <- readDNAStringSet(paste(ID_Folder, "/", "query_aligned_fasta.fasta", sep =""))
 # mat <- t(consensusMatrix(temp, baseOnly=TRUE))
@@ -53,7 +53,7 @@ fit <- hclust(dm, method="average")
 
 # Number of groups based on NJ tree
 
-num_clades <- 5
+num_clades <- 14
 
 groups <-  cutree(fit, num_clades)
 group2 <- data.frame(names(groups), groups)
@@ -61,11 +61,11 @@ group2 <- data.frame(names(groups), groups)
 #####################
 # Get length  still needs work
 
-seq_no_gaps <- as.DNAbin(del.gaps(align))
-
-seq_length <- data.frame(names(seq_no_gaps), sapply(seq_no_gaps, length))
-
-seq_gr_len <- merge(seq_length, group2, by.x = "names.seq_no_gaps.", by.y = "names.groups.")
+# seq_no_gaps <- as.DNAbin(del.gaps(align))
+# 
+# seq_length <- data.frame(names(seq_no_gaps), sapply(seq_no_gaps, length))
+# 
+# seq_gr_len <- merge(seq_length, group2, by.x = "names.seq_no_gaps.", by.y = "names.groups.")
 
 ######################################
 
@@ -89,7 +89,8 @@ j <- 1
 # runs BLAST on Biocluster server
 for(j in 1:nrow(fasta_for_GenBank)) {
 cmd2 <- paste("/opt/bio/ncbi/bin/blastall -p blastn -d /isilon/biodiversity/reference/ncbi/blastdb/reference/nt/nt -i ", ID_Folder, "/GenBank/",
-              rownames(fasta_for_GenBank)[j], ".fasta -e 10 -m 8 -v 250 -b 250 -F F -o ", ID_Folder, "/GenBank/", rownames(fasta_for_GenBank)[j], ".out", sep="")
+              rownames(fasta_for_GenBank)[j], ".fasta -e 10 -m 8 -v 250 -b 100 -F F -G 3 -E 5 -X 0 -q -5 -r 4 -W 7 -n F -o ", 
+              ID_Folder, "/GenBank/", rownames(fasta_for_GenBank)[j], ".out", sep="")
 system(cmd2)
 }
               
@@ -233,10 +234,17 @@ mean_length <- mean(width(x_trim))
 #Calculate a confidence interval
 Conf_interv <- 2*sd(width(x_trim))
 #show the sequences that will be removed
-x_trim[ (width(x_trim) > mean_length + 5*Conf_interv | width(x_trim) < mean_length - 0.5*Conf_interv) , ]
+to_remove <- x_trim[ (width(x_trim) > mean_length + 4*Conf_interv | width(x_trim) < mean_length - 3*Conf_interv) , ]
+
+length(to_remove)
+names(to_remove)
+# write file with removes sequences
+writeXStringSet(to_remove, file=paste(ID_Folder, "/GB_removed.fasta", sep=""), append=FALSE, format="fasta") 
+
 #create the file without the outliers
-xtrim_no_outliers <- x_trim[!(width(x_trim) > mean_length + 2*Conf_interv | 
-                                width(x_trim) < mean_length - 0.5*Conf_interv), ]
+xtrim_no_outliers <- x_trim[!names(x_trim) %in% names(to_remove)]
+# xtrim_no_outliers <- x_trim[!(width(x_trim) > mean_length + 2*Conf_interv | 
+#                                 width(x_trim) < mean_length - 0.5*Conf_interv), ]
 
 length(xtrim_no_outliers) 
 
@@ -245,7 +253,7 @@ writeXStringSet(xtrim_no_outliers, file=paste(ID_Folder, "/GB_csv_extracted.fast
 
 
 
-cmd2 <- paste("cat ",  ID_Folder, "/", ID_fasta_files, " ", ID_Folder, "/GB_csv_extracted.fasta > ",  ID_Folder, "/to_align.fasta", sep="")
+cmd2 <- paste("cat ",  ID_Folder, "/query_aligned_fasta.fasta ", ID_Folder, "/GB_csv_extracted.fasta > ",  ID_Folder, "/to_align.fasta", sep="")
 
 system(cmd2)
 
@@ -279,16 +287,18 @@ alignment_file2 <- paste(ID_Folder, "/All_files_aligned.fasta", sep="")
 
   
   # raw distance is p-distance with substitution -> d: transition + transversion
-  dm <- dist.dna(align, model = "K80", pairwise.deletion = FALSE, as.matrix = TRUE)
+  dm <- dist.dna(align, model = "raw", pairwise.deletion = FALSE, as.matrix = TRUE)
   
   MaxV <- max(rowSums(dm))
 
+
+
 # this is to get the root of the tree with the most distant species
-  my_root <- which(rowSums(dm) == MaxV)
+#  my_root <- which(rowSums(dm) == MaxV)
 # If this is a query sequence because of errors, this is a way to customize the choice based on GenBank number
-#  my_root <- grep("HQ012866",rownames(align))
+  my_root <- grep("HQ643415",rownames(align))
  
-  dm <- dist.dna(align, model = "raw", pairwise.deletion = FALSE, as.matrix = TRUE)
+  dm <- dist.dna(align, model = "raw", pairwise.deletion = TRUE, as.matrix = TRUE)
 
   tree <- njs(dm)
 
