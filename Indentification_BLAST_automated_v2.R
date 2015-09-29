@@ -3,7 +3,7 @@ library("xlsx")
 # library(BSgenome)
 
 # folder where fasta file is (there should be only one)
-ID_Folder <- "Mounira"
+ID_Folder <- "Downy_Mildews_Cox2"
 
 # finds fasta files
 ID_fasta_files <- list.files(path = ID_Folder, pattern = "\\.fas$|\\.fasta$", recursive = FALSE)
@@ -38,22 +38,47 @@ align <- read.dna(paste(ID_Folder, "/", "query_aligned_fasta.fasta", sep =""), f
 
 #dm <- dist.dna(align, model = "raw", pairwise.deletion = TRUE, as.matrix = TRUE)
 
-dm <- dist.dna(align, model = "RAW", pairwise.deletion = FALSE, as.matrix = FALSE)
+dm <- dist.dna(align, model = "raw", pairwise.deletion = FALSE, as.matrix = TRUE)
 
 tree <- njs(dm)
 
+MaxV <- max(rowSums(dm))
 
-pdf(file = paste(ID_Folder, "/", "NJ_tree_of_ID.pdf", sep =""), width = 8, height =11 )
-plot.phylo(tree, type = "phylogram")
-dev.off()
+
+# this is to get the root of the tree with the most distant species
+my_root <- which(rowSums(dm) == MaxV)
+# If this is a query sequence because of errors, this is a way to customize the choice based on GenBank number
+# my_root <- grep("HQ643415",rownames(align))
+
+# plot(max(unmatrix(dm, byrow = TRUE)), type="h")
+max(dm, na.rm = TRUE)
+nrow(dm)
+# write.table(dm, file = "dm.csv", append = FALSE, sep = ",", col.names = NA)
+
+pdf(file = paste(ID_Folder, "/", "NJ_tree_of_ID.pdf", sep =""), width = 8, height =14 )
+# "0.5-((nrow(dm)-50)/500)" is a rough equation to remove 0.1 to cex factor for every 50 taxa to keep font size small enough for larger data
+# if you want to have longer branches, reduce x.lim by 0.1 increments
+#plot.phylo(type = "phylogram", root(tree, root[i], node = NULL, resolve.root = TRUE), font=1, cex = 0.5,  x.lim = 0.7)
+plot.phylo(type = "phylogram", root(tree, my_root[1], node = NULL, resolve.root = TRUE), font=1, 
+           cex = 0.52 - (sqrt(nrow(dm))/70),  x.lim = 0.05 + max(dm, na.rm = TRUE)/1.3, edge.width= 1.1 - (nrow(dm)/1200), no.margin=TRUE)
+title(main="NJ", outer=FALSE, cex.main=1, font.main=2)
+dev.off()   
+
+
+# pdf(file = paste(ID_Folder, "/", "NJ_tree_of_ID.pdf", sep =""), width = 8, height =11 )
+# plot.phylo(tree, type = "phylogram")
+# dev.off()
 
 tree[[1]]
+
+# Somehow the fit command does not work with "as.matrix=TRUE"
+dm <- dist.dna(align, model = "raw", pairwise.deletion = FALSE, as.matrix = FALSE)
 
 fit <- hclust(dm, method="average") 
 
 # Number of groups based on NJ tree
 
-num_clades <- 14
+num_clades <- 20
 
 groups <-  cutree(fit, num_clades)
 group2 <- data.frame(names(groups), groups)
@@ -234,7 +259,7 @@ mean_length <- mean(width(x_trim))
 #Calculate a confidence interval
 Conf_interv <- 2*sd(width(x_trim))
 #show the sequences that will be removed
-to_remove <- x_trim[ (width(x_trim) > mean_length + 4*Conf_interv | width(x_trim) < mean_length - 3*Conf_interv) , ]
+to_remove <- x_trim[ (width(x_trim) > mean_length + 4*Conf_interv | width(x_trim) < mean_length - 5*Conf_interv) , ]
 
 length(to_remove)
 names(to_remove)
@@ -284,6 +309,7 @@ alignment_file2 <- paste(ID_Folder, "/All_files_aligned.fasta", sep="")
 
 #rownames(align) <- sub("^Lev", ">>>>>>>>>> Lev",rownames(align), ignore.case = FALSE)
 #rownames(align) <- sub("PF$", "PF <<<<<<<<<<",rownames(align), ignore.case = FALSE)
+rownames(align) <- sub("^OM", ">>>>> OM",rownames(align), ignore.case = FALSE)
 
   
   # raw distance is p-distance with substitution -> d: transition + transversion
@@ -294,11 +320,11 @@ alignment_file2 <- paste(ID_Folder, "/All_files_aligned.fasta", sep="")
 
 
 # this is to get the root of the tree with the most distant species
-#  my_root <- which(rowSums(dm) == MaxV)
+ my_root <- which(rowSums(dm) == MaxV)
 # If this is a query sequence because of errors, this is a way to customize the choice based on GenBank number
-  my_root <- grep("HQ643415",rownames(align))
+#  my_root <- grep("HQ643415",rownames(align))
  
-  dm <- dist.dna(align, model = "raw", pairwise.deletion = TRUE, as.matrix = TRUE)
+  dm <- dist.dna(align, model = "raw", pairwise.deletion = FALSE, as.matrix = TRUE)
 
   tree <- njs(dm)
 
@@ -315,11 +341,10 @@ write.tree(tree, file = paste(ID_Folder, "/nj_tree.newick", sep=""), append = FA
   # if you want to have longer branches, reduce x.lim by 0.1 increments
   #plot.phylo(type = "phylogram", root(tree, root[i], node = NULL, resolve.root = TRUE), font=1, cex = 0.5,  x.lim = 0.7)
   plot.phylo(type = "phylogram", root(tree, my_root[1], node = NULL, resolve.root = TRUE), font=1, 
-             cex = 0.52 - (sqrt(nrow(dm))/70),  x.lim = 0.05 + max(dm, na.rm = TRUE)/1.3, edge.width= 1.1 - (nrow(dm)/1200), no.margin=TRUE)
+             cex = 0.54 - (sqrt(nrow(dm))/70),  x.lim = 0.07 + max(dm, na.rm = TRUE)/1.3, edge.width= 1.1 - (nrow(dm)/1200), no.margin=TRUE)
   title(main="NJ", outer=FALSE, cex.main=1, font.main=2)
   dev.off()   
   
-
 
 
 
