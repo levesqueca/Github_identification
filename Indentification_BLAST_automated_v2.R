@@ -3,7 +3,7 @@ library("xlsx")
 # library(BSgenome)
 
 # folder where fasta file is (there should be only one)
-ID_Folder <- "Downy_Mildews_Cox2"
+ID_Folder <- "Downy_Mildews_ITS"
 
 # finds fasta files
 ID_fasta_files <- list.files(path = ID_Folder, pattern = "\\.fas$|\\.fasta$", recursive = FALSE)
@@ -38,7 +38,7 @@ align <- read.dna(paste(ID_Folder, "/", "query_aligned_fasta.fasta", sep =""), f
 
 #dm <- dist.dna(align, model = "raw", pairwise.deletion = TRUE, as.matrix = TRUE)
 
-dm <- dist.dna(align, model = "raw", pairwise.deletion = FALSE, as.matrix = TRUE)
+dm <- dist.dna(align, model = "raw", pairwise.deletion = TRUE, as.matrix = TRUE)
 
 tree <- njs(dm)
 
@@ -60,9 +60,11 @@ pdf(file = paste(ID_Folder, "/", "NJ_tree_of_ID.pdf", sep =""), width = 8, heigh
 # if you want to have longer branches, reduce x.lim by 0.1 increments
 #plot.phylo(type = "phylogram", root(tree, root[i], node = NULL, resolve.root = TRUE), font=1, cex = 0.5,  x.lim = 0.7)
 plot.phylo(type = "phylogram", root(tree, my_root[1], node = NULL, resolve.root = TRUE), font=1, 
-           cex = 0.52 - (sqrt(nrow(dm))/70),  x.lim = 0.05 + max(dm, na.rm = TRUE)/1.3, edge.width= 1.1 - (nrow(dm)/1200), no.margin=TRUE)
+           cex = 0.52 - (sqrt(nrow(dm))/70),  x.lim = 0.07 + max(dm, na.rm = TRUE)/1.3, edge.width= 1.1 - (nrow(dm)/1200), no.margin=TRUE)
 title(main="NJ", outer=FALSE, cex.main=1, font.main=2)
 dev.off()   
+
+
 
 
 # pdf(file = paste(ID_Folder, "/", "NJ_tree_of_ID.pdf", sep =""), width = 8, height =11 )
@@ -70,6 +72,20 @@ dev.off()
 # dev.off()
 
 tree[[1]]
+
+
+dm <- dist.dna(align, model = "raw", pairwise.deletion = FALSE, as.matrix = TRUE)
+
+tree <- njs(dm)
+
+pdf(file = paste(ID_Folder, "/", "NJ_tree_of_ID_for_how_many_blasts.pdf", sep =""), width = 8, height =14 )
+# "0.5-((nrow(dm)-50)/500)" is a rough equation to remove 0.1 to cex factor for every 50 taxa to keep font size small enough for larger data
+# if you want to have longer branches, reduce x.lim by 0.1 increments
+#plot.phylo(type = "phylogram", root(tree, root[i], node = NULL, resolve.root = TRUE), font=1, cex = 0.5,  x.lim = 0.7)
+plot.phylo(type = "phylogram", root(tree, my_root[1], node = NULL, resolve.root = TRUE), font=1, 
+           cex = 0.52 - (sqrt(nrow(dm))/70),  x.lim = 0.07 + max(dm, na.rm = TRUE)/1.3, edge.width= 1.1 - (nrow(dm)/1200), no.margin=TRUE)
+title(main="NJ", outer=FALSE, cex.main=1, font.main=2)
+dev.off() 
 
 # Somehow the fit command does not work with "as.matrix=TRUE"
 dm <- dist.dna(align, model = "raw", pairwise.deletion = FALSE, as.matrix = FALSE)
@@ -259,7 +275,7 @@ mean_length <- mean(width(x_trim))
 #Calculate a confidence interval
 Conf_interv <- 2*sd(width(x_trim))
 #show the sequences that will be removed
-to_remove <- x_trim[ (width(x_trim) > mean_length + 4*Conf_interv | width(x_trim) < mean_length - 5*Conf_interv) , ]
+to_remove <- x_trim[ (width(x_trim) > mean_length + 2*Conf_interv | width(x_trim) < mean_length - 1*Conf_interv) , ]
 
 length(to_remove)
 names(to_remove)
@@ -313,16 +329,16 @@ rownames(align) <- sub("^OM", ">>>>> OM",rownames(align), ignore.case = FALSE)
 
   
   # raw distance is p-distance with substitution -> d: transition + transversion
-  dm <- dist.dna(align, model = "raw", pairwise.deletion = FALSE, as.matrix = TRUE)
+  dm <- dist.dna(align, model = "raw", pairwise.deletion = TRUE, as.matrix = TRUE)
   
   MaxV <- max(rowSums(dm))
 
 
 
 # this is to get the root of the tree with the most distant species
- my_root <- which(rowSums(dm) == MaxV)
+# my_root <- which(rowSums(dm) == MaxV)
 # If this is a query sequence because of errors, this is a way to customize the choice based on GenBank number
-#  my_root <- grep("HQ643415",rownames(align))
+ my_root <- grep("KP663635",rownames(align))
  
   dm <- dist.dna(align, model = "raw", pairwise.deletion = FALSE, as.matrix = TRUE)
 
@@ -345,6 +361,30 @@ write.tree(tree, file = paste(ID_Folder, "/nj_tree.newick", sep=""), append = FA
   title(main="NJ", outer=FALSE, cex.main=1, font.main=2)
   dev.off()   
   
+
+
+#################################################
+#  Automated name matching
+
+sub_dm <- dm_diag_na[grepl(">>>", rownames(dm)),!grepl(">>>", rownames(dm))]
+
+#mins_num <- apply(sub_dm,1, function(x) which.min(x))
+
+#  This pulls out the minimum distance for weach DAOM accession
+mins <- apply(sub_dm, 1, min, na.rm=TRUE)
+#  This pulls out the name of the first hit that has the minimum distance
+mins_num_first <- apply(sub_dm,1, which.min)
+# This pulls out the multiple hist with the minimum distance, i.e. when some GenBank entries are identidal
+mins_num_multiple <- apply(sub_dm,1, function(x) which( x == min(x, na.rm=TRUE) ))
+# This creates a dataframe of the multiple hits, coercing multiple hits into a single data cell
+mins_num_multiple <-  t(as.data.frame(lapply(mins_num_multiple, function(x)  paste(names(x),collapse="|") ) ))
+
+
+Closest_match <- data.frame(names(mins), mins, colnames(sub_dm)[mins_num_first], mins_num_multiple2)
+
+
+write.table(Closest_match, file = paste(ID_Folder, "/Closest distance matrix between DAOM and GenBank.csv", sep=""), append = FALSE, sep = ",", col.names = NA)
+write.xlsx(Closest_match, file = paste(ID_Folder, "/Closest distance matrix between DAOM and GenBank.xlsx", sep=""), sheetName="Sheet1", col.names=TRUE, row.names=TRUE, append=FALSE, showNA=TRUE)
 
 
 
