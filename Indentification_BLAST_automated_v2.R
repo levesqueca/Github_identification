@@ -3,7 +3,7 @@ library("xlsx")
 # library(BSgenome)
 
 # folder where fasta file is (there should be only one)
-ID_Folder <- "Downy_Mildews_ITS"
+ID_Folder <- "Pythium_new_sp_PD_ITS"
 
 # finds fasta files
 ID_fasta_files <- list.files(path = ID_Folder, pattern = "\\.fas$|\\.fasta$", recursive = FALSE)
@@ -42,7 +42,7 @@ dm <- dist.dna(align, model = "raw", pairwise.deletion = TRUE, as.matrix = TRUE)
 
 tree <- njs(dm)
 
-MaxV <- max(rowSums(dm))
+MaxV <- max(rowSums(dm), na.rm = TRUE)
 
 
 # this is to get the root of the tree with the most distant species
@@ -94,60 +94,147 @@ fit <- hclust(dm, method="average")
 
 # Number of groups based on NJ tree
 
-num_clades <- 20
+num_clades <- 3
 
 groups <-  cutree(fit, num_clades)
-group2 <- data.frame(names(groups), groups)
+group2 <- data.frame(names(groups), groups, stringsAsFactors = FALSE)
+
+# create text file from alignment
+align_txt <- sapply(align , function(x) toString(x))
+# remove all gaps, commas, and spaces
+align_txt <- as.character(gsub("-|,| ", "", align_txt))
+align_length <- sapply(align_txt , function(x) nchar(x))
+group3 <- cbind(group2, align_length, align_txt)
+group3$align_txt <- as.character(group3$align_txt)
 
 #####################
-# Get length  still needs work
+# create a table of the different cluster with the maximu sequence length for each
+maxima <- aggregate(align_length ~ groups, data = group3[,c(2:3)], max)
 
-# seq_no_gaps <- as.DNAbin(del.gaps(align))
-# 
-# seq_length <- data.frame(names(seq_no_gaps), sapply(seq_no_gaps, length))
-# 
-# seq_gr_len <- merge(seq_length, group2, by.x = "names.seq_no_gaps.", by.y = "names.groups.")
+i <- 1
+# Puuls our a vector with a sequence name for each maximu (pulls out the first sequence when more than one have the same max length)
+maxima_by_group <- vector()
+for(i in 1:nrow(maxima)) {
+  temp1 <- subset(group3[,c(1:3)], group3$groups == maxima$groups[i] & group3$align_length == maxima$align_length[i])
+  temp2 <- temp1$names.groups.[!duplicated(temp1$align_length)]
+  maxima_by_group <- c(maxima_by_group, temp2)
+}
+
+
+sapply(group3, class)
 
 ######################################
 
-unique_ID <- names(groups[!duplicated(groups)])
+# no longer neededunique_ID <- names(groups[!duplicated(groups)])
 
 # unique_ID <- sub("NFIS4250_ITS_TB.seq", "NFIS4243_ITS_TB.seq",unique_ID, ignore.case = FALSE)
 # unique_ID <- sub("NFIS4248_ITS_TB.seq", "NFIS4249_ITS_TB.seq",unique_ID, ignore.case = FALSE)
 
 #fasta_for_GenBank <- seq_no_gaps[[names=unique_ID]]
 
-fasta_for_GenBank <- align[unique_ID,]
 
+
+fasta_for_GenBank <- group3[maxima_by_group,c(1,4)]
+# fasta_for_GenBank_seq <- fasta_for_GenBank_df[,2]
+# fasta_for_GenBank     <- fasta_for_GenBank_df[,2]
+
+# ##########################################
+# ############################################
+# # if only one sequence start with this
+# # create text file from alignment
+# align <- read.dna(paste(ID_Folder, "/", ID_fasta_files, sep =""), format="fasta", as.character = FALSE)
+# # create text file from alignment
+# align_txt <- sapply(align , function(x) toString(x))
+# # remove all gaps, commas, and spaces
+# align_txt <- as.character(gsub("-|,| ", "", align_txt))
+# fasta_for_GenBank <- cbind(rownames(align), align_txt)
+# rownames(fasta_for_GenBank) <- rownames(align)
+# 
+# #######################################################################
+# #########################################################################
+
+#  CREATE a folder entitled "GenBank", warning if already there
+dir.create(path= paste(ID_Folder, "/GenBank", sep=""), showWarnings = TRUE, recursive = FALSE)
+
+
+ 
 i <- 1
+# writes fasta files from the text table created to calculate length.
+library(seqinr)
+# for(i in 1:nrow(fasta_for_GenBank)) {
+# write.fasta(sequences = fasta_for_GenBank[i,2], names = rownames(fasta_for_GenBank)[i], nbchar = 80, 
+#             file.out = paste(ID_Folder, "/GenBank/",rownames(fasta_for_GenBank)[i], ".fasta", sep=""), open = "w")
+# }
 
-for(i in 1:nrow(fasta_for_GenBank)) {
-  write.dna(fasta_for_GenBank[i,], file=paste(ID_Folder, "/GenBank/",rownames(fasta_for_GenBank)[i], ".fasta", sep=""), format = "fasta")
-}
+write.fasta(sequences = as.list(fasta_for_GenBank[,2]), names = rownames(fasta_for_GenBank), nbchar = 80, 
+            file.out = paste(ID_Folder, "/GenBank/fasta_for_GenBank.fasta", sep=""), open = "w")
+
+
+
+# #old script for the above
+# fasta_for_GenBank <- align[unique_ID,]
+# for(i in 1:nrow(fasta_for_GenBank)) {
+#   write.dna(fasta_for_GenBank[i,], file=paste(ID_Folder, "/GenBank/",rownames(fasta_for_GenBank)[i], ".fasta", sep=""), format = "fasta")
+# }
 
 
 j <- 1
 # runs BLAST on Biocluster server
-for(j in 1:nrow(fasta_for_GenBank)) {
-cmd2 <- paste("/opt/bio/ncbi/bin/blastall -p blastn -d /isilon/biodiversity/reference/ncbi/blastdb/reference/nt/nt -i ", ID_Folder, "/GenBank/",
-              rownames(fasta_for_GenBank)[j], ".fasta -e 10 -m 8 -v 250 -b 100 -F F -G 3 -E 5 -X 0 -q -5 -r 4 -W 7 -n F -o ", 
-              ID_Folder, "/GenBank/", rownames(fasta_for_GenBank)[j], ".out", sep="")
-system(cmd2)
-}
+# for(j in 1:nrow(fasta_for_GenBank)) {
+# cmd2 <- paste("/opt/bio/ncbi/bin/blastall -p blastn -d /isilon/biodiversity/reference/ncbi/blastdb/reference/nt/nt -i ", ID_Folder, "/GenBank/",
+#               rownames(fasta_for_GenBank)[j], ".fasta -e 10 -m 8 -v 0 -b 500 -I T -F F -G 3 -E 5 -X 0 -q -5 -r 4 -W 7 -n F -o ", 
+#               ID_Folder, "/GenBank/", rownames(fasta_for_GenBank)[j], ".out", sep="")
+# system(cmd2)
+# }
               
+cmd2 <- paste("/opt/bio/ncbi/bin/blastall -p blastn -d /isilon/biodiversity/reference/ncbi/blastdb/reference/nt/nt -i ", ID_Folder, "/GenBank/fasta_for_GenBank.fasta",
+               " -e 10 -m 8 -v 0 -b 500 -I T -F F -G 3 -E 5 -X 0 -q -5 -r 4 -W 7 -n F -o ", 
+              ID_Folder, "/GenBank/fasta_for_GenBank.fasta.out", sep="")
+system(cmd2)
+
 
 k <- 1
+# 
+# GB_Blast_table <- data.frame()
+# # reads and consolitdates BLAST outputs
+# for(k in 1:nrow(fasta_for_GenBank)) {
+# temp <- read.table(paste(ID_Folder, "/GenBank/", rownames(fasta_for_GenBank)[k], ".out", sep=""),header=FALSE)
+# GB_Blast_table <- rbind(GB_Blast_table, temp)
+# }
 
-GB_Blast_table <- data.frame()
-# reads and consolitdates BLAST outputs
-for(k in 1:nrow(fasta_for_GenBank)) {
-temp <- read.table(paste(ID_Folder, "/GenBank/", rownames(fasta_for_GenBank)[k], ".out", sep=""),header=FALSE)
-GB_Blast_table <- rbind(GB_Blast_table, temp)
+
+GB_Blast_table <- read.table(paste(ID_Folder, "/GenBank/fasta_for_GenBank.fasta.out", sep=""),header=FALSE)
+
+colnames(GB_Blast_table) <- c("query id", "subject_ids", " %identity", "alignment length", "mismatches", "gap opens", "q.start", " q.end", "s.start", "s.end", "evalue", " bit_score")
+
+##############################
+##      IF THERE ARE TWO or more gi NUMBERS
+# This is to duplicate the lines with multiple identical sequences (only if NCBI BLAST is used )
+# our local Blast NR does not show multiple hits of identical sequences, only one.
+
+mult_gi <- cbind(gregexpr(";", GB_Blast_table$subject_ids, ignore.case = FALSE, perl = FALSE, fixed = FALSE, useBytes = FALSE))
+
+new_GB_Blast_table <- data.frame()
+
+#i <- 2
+
+for(i in 1:nrow(GB_Blast_table)) {
+  if (unlist(mult_gi[i])[1] != -1) {   
+    parsed_names <- strsplit(as.character(GB_Blast_table$subject_ids[i]), ";")[[1]]  # [[1]] to show first element  
+    temp_table <- do.call("rbind", replicate((length(unlist(mult_gi[i])) + 1), GB_Blast_table[i,], simplify = FALSE))
+    temp_table$subject_ids <- parsed_names   
+    new_GB_Blast_table <- rbind(new_GB_Blast_table, temp_table) 
+  } else {
+    new_GB_Blast_table <-  rbind(new_GB_Blast_table, GB_Blast_table[i,]) } 
 }
+
+
+
+
 
 summary(GB_Blast_table)
 
-colnames(GB_Blast_table) <- c("query id", "subject_ids", " %identity", "alignment length", "mismatches", "gap opens", "q.start", " q.end", "s.start", "s.end", "evalue", " bit_score")
+
 GB_Blast_table$subject_ids <- sub("\\|$", "| ",GB_Blast_table$subject_ids, ignore.case = FALSE)
 parsed_col <- data.frame(matrix(unlist(strsplit(as.character(GB_Blast_table$subject_ids), "\\|")), nrow=length(GB_Blast_table$subject_ids), byrow=T),stringsAsFactors = FALSE)
 GB_Blast_table <- data.frame(parsed_col[,4],GB_Blast_table, stringsAsFactors = FALSE)
@@ -157,8 +244,8 @@ colnames(GB_Blast_table)[1] <- "GB_accession"
 unique_GB <- unique(GB_Blast_table$GB_accession)
 
 # removes the decimal points on GenBank accessions as these caused a faiolure to retrieve files
-unique_GB <- sub("\\.0|\\.1|\\.2|\\.3|\\.4|\\.5)", "", unique(GB_Blast_table$GB_accession), ignore.case = FALSE, perl = FALSE)
-                
+unique_GB <- sub("\\.\\d+$", "", unique(GB_Blast_table$GB_accession), ignore.case = FALSE, perl = FALSE)
+
 
 sequences <- read.GenBank(unique_GB, seq.names = unique_GB,  species.names = TRUE,gene.names = FALSE,  as.character = TRUE)
 
@@ -271,11 +358,12 @@ for(i in 1:length(x_trim)) {
 
 
 #show outliers
-mean_length <- mean(width(x_trim))
+mean_length <- mean(width(x_trim), trim=0.05)
 #Calculate a confidence interval
-Conf_interv <- 2*sd(width(x_trim))
+library("chemometrics")
+Conf_interv <- 2*sd_trim(width(x_trim), trim=0.05, const=FALSE)
 #show the sequences that will be removed
-to_remove <- x_trim[ (width(x_trim) > mean_length + 2*Conf_interv | width(x_trim) < mean_length - 1*Conf_interv) , ]
+to_remove <- x_trim[ ( width(x_trim) < mean_length - 1*Conf_interv | width(x_trim) > mean_length + 2*Conf_interv), ]
 
 length(to_remove)
 names(to_remove)
@@ -326,19 +414,20 @@ alignment_file2 <- paste(ID_Folder, "/All_files_aligned.fasta", sep="")
 #rownames(align) <- sub("^Lev", ">>>>>>>>>> Lev",rownames(align), ignore.case = FALSE)
 #rownames(align) <- sub("PF$", "PF <<<<<<<<<<",rownames(align), ignore.case = FALSE)
 rownames(align) <- sub("^OM", ">>>>> OM",rownames(align), ignore.case = FALSE)
+rownames(align) <- sub("^KR", ">>>>>>>>> KR",rownames(align), ignore.case = FALSE)
 
   
   # raw distance is p-distance with substitution -> d: transition + transversion
   dm <- dist.dna(align, model = "raw", pairwise.deletion = TRUE, as.matrix = TRUE)
   
-  MaxV <- max(rowSums(dm))
+  MaxV <- max(rowSums(dm), na.rm = TRUE)
 
 
 
 # this is to get the root of the tree with the most distant species
-# my_root <- which(rowSums(dm) == MaxV)
+ my_root <- which(rowSums(dm) == MaxV)
 # If this is a query sequence because of errors, this is a way to customize the choice based on GenBank number
- my_root <- grep("KP663635",rownames(align))
+# my_root <- grep("KP663635",rownames(align))
  
   dm <- dist.dna(align, model = "raw", pairwise.deletion = FALSE, as.matrix = TRUE)
 
