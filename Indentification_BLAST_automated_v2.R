@@ -3,7 +3,7 @@ library("xlsx")
 # library(BSgenome)
 
 # folder where fasta file is (there should be only one)
-ID_Folder <- "Pythium_new_sp_PD_cox1"
+ID_Folder <- "Pythium_new_sp_PD_cox2"
 
 # finds fasta files
 ID_fasta_files <- list.files(path = ID_Folder, pattern = "\\.fas$|\\.fasta$", recursive = FALSE)
@@ -211,6 +211,7 @@ k <- 1
 
 
 GB_Blast_table <- read.table(paste(ID_Folder, "/GenBank/fasta_for_GenBank.fasta.out", sep=""),header=FALSE)
+#GB_Blast_table <- read.csv(paste(ID_Folder, "/GenBank/fasta_for_GenBank.fasta.out", sep=""),header=FALSE)
 
 colnames(GB_Blast_table) <- c("query id", "subject_ids", " %identity", "alignment length", "mismatches", "gap opens", "q.start", " q.end", "s.start", "s.end", "evalue", " bit_score")
 
