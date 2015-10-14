@@ -209,17 +209,21 @@ k <- 1
 # GB_Blast_table <- rbind(GB_Blast_table, temp)
 # }
 
+##############################
+##      IF THERE ARE TWO or more gi NUMBERS
+# This is to duplicate the lines with multiple identical sequences (only if NCBI BLAST is used )
+# our local Blast NR does not show multiple hits of identical sequences, only one.
+#  Local t<Blast uses tab delimited, so use that for NCBA as well.
+###############################################################
+
+
 
 GB_Blast_table <- read.table(paste(ID_Folder, "/GenBank/fasta_for_GenBank.fasta.out", sep=""),header=FALSE)
 #GB_Blast_table <- read.csv(paste(ID_Folder, "/GenBank/fasta_for_GenBank.fasta.out", sep=""),header=FALSE)
 
 colnames(GB_Blast_table) <- c("query id", "subject_ids", " %identity", "alignment length", "mismatches", "gap opens", "q.start", " q.end", "s.start", "s.end", "evalue", " bit_score")
 
-##############################
-##      IF THERE ARE TWO or more gi NUMBERS
-# This is to duplicate the lines with multiple identical sequences (only if NCBI BLAST is used )
-# our local Blast NR does not show multiple hits of identical sequences, only one.
-
+# to break multiple gi numbers/ accessions from NCBI table
 mult_gi <- cbind(gregexpr(";", GB_Blast_table$subject_ids, ignore.case = FALSE, perl = FALSE, fixed = FALSE, useBytes = FALSE))
 
 new_GB_Blast_table <- data.frame()
