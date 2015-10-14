@@ -3,7 +3,7 @@ library("xlsx")
 # library(BSgenome)
 
 # folder where fasta file is (there should be only one)
-ID_Folder <- "Pythium_new_sp_PD_ITS"
+ID_Folder <- "Pythium_new_sp_PD_cox1"
 
 # finds fasta files
 ID_fasta_files <- list.files(path = ID_Folder, pattern = "\\.fas$|\\.fasta$", recursive = FALSE)
@@ -186,7 +186,14 @@ j <- 1
 #               ID_Folder, "/GenBank/", rownames(fasta_for_GenBank)[j], ".out", sep="")
 # system(cmd2)
 # }
-              
+
+#######################################################################
+#  It may be faster here to go to NCBI Blast to blast with the fasta file with multiple sequences.  The saved HIT file has multiple sequences.
+#  Below is the option of doing it through Blast on biocluster
+#  The advantage of web approach is that you get the multiple hits for identical sequences but only the first one for the biocluster approach
+
+
+
 cmd2 <- paste("/opt/bio/ncbi/bin/blastall -p blastn -d /isilon/biodiversity/reference/ncbi/blastdb/reference/nt/nt -i ", ID_Folder, "/GenBank/fasta_for_GenBank.fasta",
                " -e 10 -m 8 -v 0 -b 500 -I T -F F -G 3 -E 5 -X 0 -q -5 -r 4 -W 7 -n F -o ", 
               ID_Folder, "/GenBank/fasta_for_GenBank.fasta.out", sep="")
@@ -216,7 +223,7 @@ mult_gi <- cbind(gregexpr(";", GB_Blast_table$subject_ids, ignore.case = FALSE, 
 
 new_GB_Blast_table <- data.frame()
 
-#i <- 2
+#i <- 3
 
 for(i in 1:nrow(GB_Blast_table)) {
   if (unlist(mult_gi[i])[1] != -1) {   
@@ -229,7 +236,7 @@ for(i in 1:nrow(GB_Blast_table)) {
 }
 
 
-
+GB_Blast_table <- new_GB_Blast_table 
 
 
 summary(GB_Blast_table)
