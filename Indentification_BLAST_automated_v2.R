@@ -15,7 +15,7 @@ ID_fasta_files  <- ID_fasta_files[c(1)]
 ID_fasta_files
 
 # makes a linsi command from this file with reorientation
-# cmd <- paste("/opt/bio/mafft/bin/linsi --adjustdirection --auto --reorder ",  ID_Folder, "/", ID_fasta_files, " > ", ID_Folder, "/", "query_aligned_fasta.fasta", sep = "")
+# cmd <- paste("/opt/bio/mafft/bin/linsi --adjustdirection --auto --reorder  ",  ID_Folder, "/", ID_fasta_files, " > ", ID_Folder, "/", "query_aligned_fasta.fasta", sep = "")
 
 # makes a linsi command from this file without  reorientation
 cmd <- paste("/opt/bio/mafft/bin/linsi --reorder '",  ID_Folder, "/", ID_fasta_files, "' > ", ID_Folder, "/", "query_aligned_fasta.fasta", sep = "")
