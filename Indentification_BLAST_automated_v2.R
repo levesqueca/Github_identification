@@ -200,6 +200,55 @@ cmd2 <- paste("/opt/bio/ncbi/bin/blastall -p blastn -d /isilon/biodiversity/refe
 system(cmd2)
 
 
+#########################################################################################################
+# the following commented out is a way to restrict search on much smaller nt data, making it a lot faster on local server
+# blastn is also a much more powerfull way to search   still in development
+
+# library("rentrez")
+# query <- "(txid4762 [ORGN] AND (rRNA[Feature] OR misc_RNA)) NOT(environmental samples[organism] OR metagenomes[orgn] OR txid32644[orgn])"
+# web_env_search <- entrez_search(db="nuccore", query, retmax=99999)
+# web_env_search
+# write.table(web_env_search$ids, file = "~/Identification_service/Downy_Mildews_ITS/GenBank/gilist.txt", append = FALSE, quote=FALSE, row.names=FALSE, col.names = FALSE)
+# 
+# # blastn options here
+# # http://www.ncbi.nlm.nih.gov/books/NBK279675/#!po=100.000
+# 
+# 
+# cmd2 <- "/opt/bio/ncbi-blast+/bin/blastn -db /isilon/biodiversity/reference/ncbi/blastdb/reference/nt/nt -query ~/Identification_service/Downy_Mildews_ITS/GenBank/OM435A_Plasmopara_acalyphae_1937_Acalypha_virginica_Canada_86197_ITS1.fasta -gilist ~/Identification_service/Downy_Mildews_ITS/GenBank/gilist.txt -out ~/Identification_service/Downy_Mildews_ITS/GenBank/result_12h19.bls" 
+# 
+# system(cmd2)
+# 
+# 
+# writeChar(web_env_search$ids, file = "~/Identification_service/Downy_Mildews_ITS/GenBank/gilist.txt")
+# 
+# writeChar(object, con, nchars = nchar(object, type = "chars"),
+#           eos = "", useBytes = FALSE)
+# 
+# 
+# web_env_search <- entrez_search(db="nuccore", query, usehistory="y")
+# web_env_search
+# web_env_search$ids
+# 
+# cookie <- web_env_search$WebEnv
+# qk <- web_env_search$QueryKey
+# snail_coi <- entrez_fetch(db = "nuccore", WebEnv = cookie, query_key = qk,
+#                           file_format = "fasta", retmax = 10)
+# 
+# 
+# 
+# r_search <- entrez_search(db="nucleotide", term="(txid4762 [ORGN]) NOT(environmental samples[organism] OR metagenomes[orgn] OR txid32644[orgn])", usehistory="y")
+# r_search[[1]]
+# web_env_search$WebEnv
+# 
+# r_search$web_history
+# 
+
+
+################################################################
+####################################################################
+
+
+
 k <- 1
 # 
 # GB_Blast_table <- data.frame()
