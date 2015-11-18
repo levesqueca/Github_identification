@@ -4,14 +4,16 @@ library("ape")
 # library(BSgenome)
 
 # folder where fasta file is (there should be only one)
-ID_Folder <- "Pythium_Brazil_nov_2015"
-dir.create(paste("", ID_Folder, sep=""), showWarnings = TRUE, recursive = FALSE)
+ID_Folder <- "Pythium_myriotylum"
 
-sequences <- read.GenBank(c("AB499704","AY149173", "HQ643546","KP063131", "HQ643717"), species.names = TRUE,gene.names = FALSE,  as.character = TRUE)
-
-names(sequences) <- paste(attr(sequences,"species"), names(sequences), sep="_")
-
-write.dna(sequences, paste(ID_Folder, "/fasta_from_NCBI.fasta", sep=""), format = "fasta", append = FALSE)
+# # if I want to create my own fasta
+# dir.create(paste("", ID_Folder, sep=""), showWarnings = TRUE, recursive = FALSE)
+# 
+# sequences <- read.GenBank(c("AB499704","AY149173", "HQ643546","KP063131", "HQ643717"), species.names = TRUE,gene.names = FALSE,  as.character = TRUE)
+# 
+# names(sequences) <- paste(attr(sequences,"species"), names(sequences), sep="_")
+# 
+# write.dna(sequences, paste(ID_Folder, "/fasta_from_NCBI.fasta", sep=""), format = "fasta", append = FALSE)
 
 # finds fasta files
 ID_fasta_files <- list.files(path = ID_Folder, pattern = "\\.fas$|\\.fasta$", recursive = FALSE)
@@ -19,7 +21,7 @@ ID_fasta_files <- list.files(path = ID_Folder, pattern = "\\.fas$|\\.fasta$", re
 
 # Pick the right file(s)
 ID_fasta_files
-ID_fasta_files  <- ID_fasta_files[c(1)]
+ID_fasta_files  <- ID_fasta_files[1]
 ID_fasta_files
 
 # makes a linsi command from this file with reorientation
@@ -510,7 +512,7 @@ rownames(align) <- sub("^KR", ">>>>>>>>> KR",rownames(align), ignore.case = FALS
 # If this is a query sequence because of errors, this is a way to customize the choice based on GenBank number
 # my_root <- grep("KP663635",rownames(align))
  
-  dm <- dist.dna(align, model = "raw", pairwise.deletion = TRUE, as.matrix = TRUE)
+  dm <- dist.dna(align, model = "raw", pairwise.deletion = FALSE, as.matrix = TRUE)
 
   tree <- njs(dm)
 
