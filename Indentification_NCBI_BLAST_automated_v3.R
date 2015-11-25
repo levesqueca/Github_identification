@@ -4,7 +4,7 @@ library("ape")
 # library(BSgenome)
 
 # folder where fasta file is (there should be only one)
-ID_Folder <- "Pythium_myriotylum"
+ID_Folder <- "Pythium_nunn"
 
 # # if I want to create my own fasta
 # dir.create(paste("", ID_Folder, sep=""), showWarnings = TRUE, recursive = FALSE)
@@ -104,7 +104,7 @@ fit <- hclust(dm, method="average")
 
 # Number of groups based on NJ tree
 
-num_clades <- 5
+num_clades <- 3
 
 groups <-  cutree(fit, num_clades)
 group2 <- data.frame(names(groups), groups, stringsAsFactors = FALSE)
@@ -224,11 +224,11 @@ j <- 1
 # options here
 # http://www.ncbi.nlm.nih.gov/books/NBK279675/#!po=100.000
 
-  blastn -db nr -query OM435A_Plasmopara_acalyphae_1937_Acalypha_virginica_Canada_86197_ITS1.fasta -entrez_query txid4762[ORGN] -outfmt '6 length' -remote -out result_10h00.txt 
-
-blastn -db /isilon/biodiversity/reference/ncbi/blastdb/reference/nt/nt -query OM435A_Plasmopara_acalyphae_1937_Acalypha_virginica_Canada_86197_ITS1.fasta -out result_10h28.bls 
-
-blastn -db /isilon/biodiversity/reference/ncbi/blastdb/reference/nt/nt -query OM435A_Plasmopara_acalyphae_1937_Acalypha_virginica_Canada_86197_ITS1.fasta -out result_10h28.bls 
+#   blastn -db nr -query OM435A_Plasmopara_acalyphae_1937_Acalypha_virginica_Canada_86197_ITS1.fasta -entrez_query txid4762[ORGN] -outfmt '6 length' -remote -out result_10h00.txt 
+# 
+# blastn -db /isilon/biodiversity/reference/ncbi/blastdb/reference/nt/nt -query OM435A_Plasmopara_acalyphae_1937_Acalypha_virginica_Canada_86197_ITS1.fasta -out result_10h28.bls 
+# 
+# blastn -db /isilon/biodiversity/reference/ncbi/blastdb/reference/nt/nt -query OM435A_Plasmopara_acalyphae_1937_Acalypha_virginica_Canada_86197_ITS1.fasta -out result_10h28.bls 
 
 # get a taxonomy code here
 # http://www.ncbi.nlm.nih.gov/Taxonomy/Browser/wwwtax.cgi
@@ -250,13 +250,13 @@ write.table(web_env_search$ids, file = paste(ID_Folder,"/GenBank/gilist.txt", se
 # "frames","qframe","sframe","btop","staxids","sscinames","scomnames","sblastnames","sskingdoms","stitle","salltitles",
 # "sstrand","qcovs","qcovhsp")
 
-outfmt_cols <- c("qseqid","sallacc","pident","length","mismatch","gapopen","qstart","qend","sstart","send","evalue","bitscore")
-
-colnames(GB_Blast_table) <- c("query id", "subject_ids", " %identity", "alignment length", "mismatches", "gap opens", "q.start", " q.end", "s.start", "s.end", "evalue", " bit_score")
+# outfmt_cols <- c("qseqid","sallacc","pident","length","mismatch","gapopen","qstart","qend","sstart","send","evalue","bitscore")
+# 
+# colnames(GB_Blast_table) <- c("query id", "subject_ids", " %identity", "alignment length", "mismatches", "gap opens", "q.start", " q.end", "s.start", "s.end", "evalue", " bit_score")
 
 cmd2 <- paste("/opt/bio/ncbi-blast+/bin/blastn -db /isilon/biodiversity/reference/ncbi/blastdb/reference/nt/nt -query ",
               ID_Folder, "/GenBank/fasta_for_GenBank.fasta -max_target_seqs 200 -gilist ", ID_Folder, 
-              "/GenBank/gilist.txt -dust no -outfmt '6 ", paste(outfmt_cols, collapse=" "), "' -out ",
+              "/GenBank/gilist.txt -gapopen 1 -gapextend 1 -xdrop_gap 30 -xdrop_gap_final 100 -dust no -outfmt '6 ", paste(outfmt_cols, collapse=" "), "' -out ",
               ID_Folder, "/GenBank/fasta_for_GenBank.fasta.out", sep="")
 system(cmd2)
 
@@ -289,9 +289,9 @@ system(cmd2)
 GB_Blast_table <- read.table(paste(ID_Folder, "/GenBank/fasta_for_GenBank.fasta.out", sep=""),header=FALSE, stringsAsFactors=FALSE)
 #GB_Blast_table <- read.csv(paste(ID_Folder, "/GenBank/fasta_for_GenBank.fasta.out", sep=""),header=FALSE)
 
-colnames(GB_Blast_table) <- outfmt_cols
+#colnames(GB_Blast_table) <- outfmt_cols
 
-colnames(GB_Blast_table) <- c("query id", "subject_ids", " %identity", "alignment length", "mismatches", "gap opens", "q.start", " q.end", "s.start", "s.end", "evalue", " bit_score")
+colnames(GB_Blast_table) <- c("query_id", "subject_ids", " %identity", "alignment_length", "mismatches", "gap_opens", "q_start", " q_end", "s_start", "s_end", "evalue", " bit_score")
 
 
 # to break multiple gi numbers/ accessions from NCBI table
@@ -345,7 +345,7 @@ sequences <- read.GenBank(unique_GB, seq.names = unique_GB,  species.names = TRU
 sequences_ord <- sequences[order(names(sequences))] 
 
 names(sequences_ord)[1]
-sequences_ord[[1]]
+#sequences_ord[[1]]
 
 full_names <- data.frame(attr(sequences, "species"),names(sequences), stringsAsFactors = FALSE)
 
@@ -367,24 +367,24 @@ for(i in 1:length(sequences_ord)) {
 
 
 # Creates a +/- column for orientation of sequences
-GB_Blast_table$orientation <- sign(GB_Blast_table$s.end - GB_Blast_table$s.start)
+GB_Blast_table$orientation <- sign(GB_Blast_table$s_end - GB_Blast_table$s_start)
 
-GB_Blast_table$length <- abs(GB_Blast_table$s.end - GB_Blast_table$s.start)
+GB_Blast_table$length <- abs(GB_Blast_table$s_end - GB_Blast_table$s_start)
 
 #min_length <- 50
 
 #GB_Blast_table <-  subset(GB_Blast_table, GB_Blast_table$length > min_length) 
 
 
-GB_Blast_table$query.id <- as.character(GB_Blast_table$query.id)
+GB_Blast_table$query_id <- as.character(GB_Blast_table$query_id)
 
 # Put together data from multiple hits on single line
 dat_agg <- aggregate(GB_Blast_table[c(2:14)], by=list(GB_Blast_table$GB_accession, GB_Blast_table$GB_accession),FUN=c)
 
 # find min and max and sense of hits
 for(i in 1:nrow(dat_agg)) {
-  dat_agg$min[i] <- min(unlist(c(dat_agg$s.start[i],dat_agg$s.end[i])))
-  dat_agg$max[i] <- max(unlist(c(dat_agg$s.start[i],dat_agg$s.end[i])))
+  dat_agg$min[i] <- min(unlist(c(dat_agg$s_start[i],dat_agg$s_end[i])))
+  dat_agg$max[i] <- max(unlist(c(dat_agg$s_start[i],dat_agg$s_end[i])))
   dat_agg$sense[i] <- mean(unlist(c(dat_agg$orientation[i]))) 
 }
 
@@ -442,11 +442,14 @@ for(i in 1:length(x_trim)) {
 
 #show outliers
 mean_length <- mean(width(x_trim), trim=0.05)
-#Calculate a confidence interval
+query_length <- mean(nchar(fasta_for_GenBank$align_txt))
+
+#Calculate a confidence interval based on all sequences
 library("chemometrics")
 Conf_interv <- 2*sd_trim(width(x_trim), trim=0.05, const=FALSE)
 #show the sequences that will be removed
-to_remove <- x_trim[ ( width(x_trim) < mean_length - 1*Conf_interv | width(x_trim) > mean_length + 2*Conf_interv), ]
+to_remove <- x_trim[ ( width(x_trim) < query_length - 1*Conf_interv | width(x_trim) > query_length + 2*Conf_interv), ]
+#to_remove <- x_trim[ ( width(x_trim) < mean_length - 1*Conf_interv | width(x_trim) > mean_length + 2*Conf_interv), ]
 
 length(to_remove)
 names(to_remove)
@@ -496,8 +499,8 @@ alignment_file2 <- paste(ID_Folder, "/All_files_aligned.fasta", sep="")
 
 #rownames(align) <- sub("^Lev", ">>>>>>>>>> Lev",rownames(align), ignore.case = FALSE)
 #rownames(align) <- sub("PF$", "PF <<<<<<<<<<",rownames(align), ignore.case = FALSE)
-rownames(align) <- sub("^OM", ">>>>> OM",rownames(align), ignore.case = FALSE)
-rownames(align) <- sub("^KR", ">>>>>>>>> KR",rownames(align), ignore.case = FALSE)
+rownames(align) <- sub("Pythium_nunn_CCTU", ">>>>> Pythium_nunn_CCTU",rownames(align), ignore.case = FALSE)
+#rownames(align) <- sub("^KR", ">>>>>>>>> KR",rownames(align), ignore.case = FALSE)
 
   
   # raw distance is p-distance with substitution -> d: transition + transversion
@@ -510,7 +513,7 @@ rownames(align) <- sub("^KR", ">>>>>>>>> KR",rownames(align), ignore.case = FALS
 # this is to get the root of the tree with the most distant species
  my_root <- which(rowSums(dm) == MaxV)
 # If this is a query sequence because of errors, this is a way to customize the choice based on GenBank number
-# my_root <- grep("KP663635",rownames(align))
+my_root <- grep("HQ643708",rownames(align))
  
   dm <- dist.dna(align, model = "raw", pairwise.deletion = FALSE, as.matrix = TRUE)
 
@@ -641,7 +644,7 @@ GB_Blast_table <-read.table(GB_Blast_csv_list[i],sep=",",header=FALSE)
 # }
 
 # Put proper column names on BLASTGenBank output
-colnames(GB_Blast_table) <- c("query id", "subject_ids", " %identity", "alignment length", "mismatches", "gap opens", "q.start", " q.end", "s.start", "s.end", "evalue", " bit_score")
+colnames(GB_Blast_table) <- c("query_id", "subject_ids", " %identity", "alignment_length", "mismatches", "gap_opens", "q_start", " q_end", "s_start", "s_end", "evalue", " bit_score")
 # Order Hit table like the sequences
 GB_Blast_table <- GB_Blast_table[order(GB_Blast_table$subject_ids), ] 
 
