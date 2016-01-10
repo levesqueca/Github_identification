@@ -4,7 +4,7 @@ library("ape")
 # library(BSgenome)
 
 # folder where fasta file is (there should be only one)
-ID_Folder <- "Pythium_nunn"
+ID_Folder <- "Pythium_Moorman_cox1"
 
 # # if I want to create my own fasta
 # dir.create(paste("", ID_Folder, sep=""), showWarnings = TRUE, recursive = FALSE)
@@ -104,7 +104,7 @@ fit <- hclust(dm, method="average")
 
 # Number of groups based on NJ tree
 
-num_clades <- 3
+num_clades <- 4
 
 groups <-  cutree(fit, num_clades)
 group2 <- data.frame(names(groups), groups, stringsAsFactors = FALSE)
@@ -234,7 +234,9 @@ j <- 1
 # http://www.ncbi.nlm.nih.gov/Taxonomy/Browser/wwwtax.cgi
 
 library("rentrez")
-query <- "(Oomycetes[ORGN] AND (rRNA[Feature] OR misc_RNA[Feature])) NOT(environmental samples[organism] OR metagenomes[orgn] OR unidentified[orgn])"
+#query <- "(Oomycetes[ORGN] AND (rRNA[Feature] OR misc_RNA[Feature])) NOT(environmental samples[organism] OR metagenomes[orgn] OR unidentified[orgn])"
+query <- "(Oomycetes[ORGN] AND (cox1[gene] OR cytochrome[product] OR COI[gene])) NOT(Phytophthora[ORGN] OR environmental samples[organism] OR metagenomes[orgn] OR unidentified[orgn])"
+
 web_env_search <- entrez_search(db="nuccore", query, retmax=99999)
 web_env_search
 write.table(web_env_search$ids, file = paste(ID_Folder,"/GenBank/gilist.txt", sep=""), append = FALSE, quote=FALSE, row.names=FALSE, col.names = FALSE)
@@ -250,7 +252,7 @@ write.table(web_env_search$ids, file = paste(ID_Folder,"/GenBank/gilist.txt", se
 # "frames","qframe","sframe","btop","staxids","sscinames","scomnames","sblastnames","sskingdoms","stitle","salltitles",
 # "sstrand","qcovs","qcovhsp")
 
-# outfmt_cols <- c("qseqid","sallacc","pident","length","mismatch","gapopen","qstart","qend","sstart","send","evalue","bitscore")
+outfmt_cols <- c("qseqid","sallacc","pident","length","mismatch","gapopen","qstart","qend","sstart","send","evalue","bitscore")
 # 
 # colnames(GB_Blast_table) <- c("query id", "subject_ids", " %identity", "alignment length", "mismatches", "gap opens", "q.start", " q.end", "s.start", "s.end", "evalue", " bit_score")
 
@@ -343,8 +345,9 @@ sequences <- read.GenBank(unique_GB, seq.names = unique_GB,  species.names = TRU
 # names(sequences)[1]
 
 sequences_ord <- sequences[order(names(sequences))] 
-
 names(sequences_ord)[1]
+attr(sequences, "species")
+
 #sequences_ord[[1]]
 
 full_names <- data.frame(attr(sequences, "species"),names(sequences), stringsAsFactors = FALSE)
@@ -499,8 +502,8 @@ alignment_file2 <- paste(ID_Folder, "/All_files_aligned.fasta", sep="")
 
 #rownames(align) <- sub("^Lev", ">>>>>>>>>> Lev",rownames(align), ignore.case = FALSE)
 #rownames(align) <- sub("PF$", "PF <<<<<<<<<<",rownames(align), ignore.case = FALSE)
-rownames(align) <- sub("Pythium_nunn_CCTU", ">>>>> Pythium_nunn_CCTU",rownames(align), ignore.case = FALSE)
-#rownames(align) <- sub("^KR", ">>>>>>>>> KR",rownames(align), ignore.case = FALSE)
+#rownames(align) <- sub("Pythium_nunn_CCTU", ">>>>> Pythium_nunn_CCTU",rownames(align), ignore.case = FALSE)
+rownames(align) <- sub("^gb", ">>>>>>>>>>>>> gb_",rownames(align), ignore.case = FALSE)
 
   
   # raw distance is p-distance with substitution -> d: transition + transversion
@@ -511,9 +514,10 @@ rownames(align) <- sub("Pythium_nunn_CCTU", ">>>>> Pythium_nunn_CCTU",rownames(a
 
 
 # this is to get the root of the tree with the most distant species
- my_root <- which(rowSums(dm) == MaxV)
+my_root <- which(rowSums(dm) == MaxV)
 # If this is a query sequence because of errors, this is a way to customize the choice based on GenBank number
-my_root <- grep("HQ643708",rownames(align))
+#
+#my_root <- grep("AY534144",rownames(align))
  
   dm <- dist.dna(align, model = "raw", pairwise.deletion = FALSE, as.matrix = TRUE)
 
@@ -527,13 +531,13 @@ write.tree(tree, file = paste(ID_Folder, "/nj_tree.newick", sep=""), append = FA
   nrow(dm)
   # write.table(dm, file = "dm.csv", append = FALSE, sep = ",", col.names = NA)
   
-  pdf(file = paste(ID_Folder, "/NJ_bionj_K80_tree_GenBank_and_ID_trimmed.pdf", sep=""), width = 8, height =14 )
+  pdf(file = paste(ID_Folder, "/NJ_bionj_K80_tree_GenBank_and_ID_trimmed.pdf", sep=""), width = 8, height =24 )
   # "0.5-((nrow(dm)-50)/500)" is a rough equation to remove 0.1 to cex factor for every 50 taxa to keep font size small enough for larger data
   # if you want to have longer branches, reduce x.lim by 0.1 increments
   #plot.phylo(type = "phylogram", root(tree, root[i], node = NULL, resolve.root = TRUE), font=1, cex = 0.5,  x.lim = 0.7)
   plot.phylo(type = "phylogram", root(tree, my_root[1], node = NULL, resolve.root = TRUE), font=1, 
              cex = 0.54 - (sqrt(nrow(dm))/70),  x.lim = 0.07 + max(dm, na.rm = TRUE)/1.3, edge.width= 1.1 - (nrow(dm)/1200), no.margin=TRUE)
-  title(main="NJ", outer=FALSE, cex.main=1, font.main=2)
+  title(main="", outer=FALSE, cex.main=1, font.main=2)
   dev.off()   
   
 
