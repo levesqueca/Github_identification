@@ -4,7 +4,7 @@ library("ape")
 # library(BSgenome)
 
 # folder where fasta file is (there should be only one)
-ID_Folder <- "Pythium_Moorman_cox1"
+ID_Folder <- "Pythium_for_Arthur"
 
 # # if I want to create my own fasta
 # dir.create(paste("", ID_Folder, sep=""), showWarnings = TRUE, recursive = FALSE)
@@ -104,7 +104,7 @@ fit <- hclust(dm, method="average")
 
 # Number of groups based on NJ tree
 
-num_clades <- 4
+num_clades <- 3
 
 groups <-  cutree(fit, num_clades)
 group2 <- data.frame(names(groups), groups, stringsAsFactors = FALSE)
@@ -234,8 +234,8 @@ j <- 1
 # http://www.ncbi.nlm.nih.gov/Taxonomy/Browser/wwwtax.cgi
 
 library("rentrez")
-#query <- "(Oomycetes[ORGN] AND (rRNA[Feature] OR misc_RNA[Feature])) NOT(environmental samples[organism] OR metagenomes[orgn] OR unidentified[orgn])"
-query <- "(Oomycetes[ORGN] AND (cox1[gene] OR cytochrome[product] OR COI[gene])) NOT(Phytophthora[ORGN] OR environmental samples[organism] OR metagenomes[orgn] OR unidentified[orgn])"
+query <- "(Oomycetes[ORGN] AND (rRNA[Feature] OR misc_RNA[Feature])) NOT(environmental samples[organism] OR metagenomes[orgn] OR unidentified[orgn])"
+#query <- "(Oomycetes[ORGN] AND (cox1[gene] OR cytochrome[product] OR COI[gene])) NOT(Phytophthora[ORGN] OR environmental samples[organism] OR metagenomes[orgn] OR unidentified[orgn])"
 
 web_env_search <- entrez_search(db="nuccore", query, retmax=99999)
 web_env_search
@@ -477,7 +477,7 @@ system(cmd2)
 
 
 
-
+#cmd3 <- paste("/opt/bio/mafft/bin/mafft --auto --reorder ",  ID_Folder, "/GB_csv_extracted.fasta > ", ID_Folder, "/All_files_aligned.fasta", sep="")
 cmd3 <- paste("/opt/bio/mafft/bin/mafft --auto --reorder ",  ID_Folder, "/to_align.fasta > ", ID_Folder, "/All_files_aligned.fasta", sep="")
 
 system(cmd3)
@@ -519,7 +519,7 @@ my_root <- which(rowSums(dm) == MaxV)
 #
 #my_root <- grep("AY534144",rownames(align))
  
-  dm <- dist.dna(align, model = "raw", pairwise.deletion = FALSE, as.matrix = TRUE)
+  dm <- dist.dna(align, model = "raw", pairwise.deletion = TRUE, as.matrix = TRUE)
 
   tree <- njs(dm)
 
