@@ -4,7 +4,7 @@ library("ape")
 # library(BSgenome)
 
 # folder where fasta file is (there should be only one)
-ID_Folder <- "Downy_Mildews_ITS"
+ID_Folder <- "Downy_Mildews_Cox2"
 
 # # if I want to create my own fasta
 # dir.create(paste("", ID_Folder, sep=""), showWarnings = TRUE, recursive = FALSE)
@@ -234,11 +234,11 @@ j <- 1
 # http://www.ncbi.nlm.nih.gov/Taxonomy/Browser/wwwtax.cgi
 
 library("rentrez")
-query <- "(Oomycetes[ORGN] AND (rRNA[Feature] OR misc_RNA[Feature])) NOT(environmental samples[organism] OR metagenomes[orgn] OR unidentified[orgn])"
+#query <- "(Oomycetes[ORGN] AND (rRNA[Feature] OR misc_RNA[Feature])) NOT(environmental samples[organism] OR metagenomes[orgn] OR unidentified[orgn])"
 #query <- "(Oomycetes[ORGN] AND (cox1[gene] OR cytochrome[product] OR COI[gene])) NOT(Phytophthora[ORGN] OR environmental samples[organism] OR metagenomes[orgn] OR unidentified[orgn])"
+query <- "(Oomycetes[ORGN] AND (cox2gene] OR cytochrome[product] OR COIIgene])) NOT(Phytophthora[ORGN] OR environmental samples[organism] OR metagenomes[orgn] OR unidentified[orgn])"
 #query <- "(Viridiplantae[ORGN] AND (rcbl[gene] OR ribulose[product]) NOT(environmental samples[organism] OR metagenomes[orgn] OR unidentified[orgn])"
 
-length(web_env_search$ids)
 
 web_env_search <- entrez_search(db="nuccore", query, retmax=999999)
 web_env_search
