@@ -1,10 +1,10 @@
-library(Biostrings)
+dirlibrary(Biostrings)
 library("xlsx")
 library("ape")
 # library(BSgenome)
 
 # folder where fasta file is (there should be only one)
-ID_Folder <- "Pythium_for_Arthur"
+ID_Folder <- "Downy_Mildews_ITS"
 
 # # if I want to create my own fasta
 # dir.create(paste("", ID_Folder, sep=""), showWarnings = TRUE, recursive = FALSE)
@@ -104,7 +104,7 @@ fit <- hclust(dm, method="average")
 
 # Number of groups based on NJ tree
 
-num_clades <- 3
+num_clades <- 50
 
 groups <-  cutree(fit, num_clades)
 group2 <- data.frame(names(groups), groups, stringsAsFactors = FALSE)
@@ -122,7 +122,7 @@ group3$align_txt <- as.character(group3$align_txt)
 maxima <- aggregate(align_length ~ groups, data = group3[,c(2:3)], max)
 
 i <- 1
-# Puuls our a vector with a sequence name for each maximu (pulls out the first sequence when more than one have the same max length)
+# Pulls out a vector with a sequence name for each maximu (pulls out the first sequence when more than one have the same max length)
 maxima_by_group <- vector()
 for(i in 1:nrow(maxima)) {
   temp1 <- subset(group3[,c(1:3)], group3$groups == maxima$groups[i] & group3$align_length == maxima$align_length[i])
@@ -236,9 +236,13 @@ j <- 1
 library("rentrez")
 query <- "(Oomycetes[ORGN] AND (rRNA[Feature] OR misc_RNA[Feature])) NOT(environmental samples[organism] OR metagenomes[orgn] OR unidentified[orgn])"
 #query <- "(Oomycetes[ORGN] AND (cox1[gene] OR cytochrome[product] OR COI[gene])) NOT(Phytophthora[ORGN] OR environmental samples[organism] OR metagenomes[orgn] OR unidentified[orgn])"
+#query <- "(Viridiplantae[ORGN] AND (rcbl[gene] OR ribulose[product]) NOT(environmental samples[organism] OR metagenomes[orgn] OR unidentified[orgn])"
 
-web_env_search <- entrez_search(db="nuccore", query, retmax=99999)
+length(web_env_search$ids)
+
+web_env_search <- entrez_search(db="nuccore", query, retmax=999999)
 web_env_search
+length(web_env_search$ids)
 write.table(web_env_search$ids, file = paste(ID_Folder,"/GenBank/gilist.txt", sep=""), append = FALSE, quote=FALSE, row.names=FALSE, col.names = FALSE)
 
 # blastn options here
@@ -406,7 +410,7 @@ check_order <- data.frame(names(GB_DNAstring), dat_agg[,1])
 # Very Important
 # THE ORDER OF THESE TWO COLUMNS SHOULD BE THE SAME
 # SEQUENCES WILL BE OFF IF NOT
-write.table(check_order, file = paste(ID_Folder,"CHECK ORDER OF FASTA file AND BLAST TABLE.csv",sep=" "), append = FALSE, sep = ",", col.names = NA)
+write.table(check_order, file = paste(ID_Folder,"/CHECK ORDER OF FASTA file AND BLAST TABLE.csv",sep=""), append = FALSE, sep = ",", col.names = NA)
 
 
 # from here http://stackoverflow.com/questions/13545547/how-to-write-a-data-frame-with-one-column-a-list-to-a-file
@@ -452,7 +456,7 @@ library("chemometrics")
 Conf_interv <- 2*sd_trim(width(x_trim), trim=0.05, const=FALSE)
 #show the sequences that will be removed
 to_remove <- x_trim[ ( width(x_trim) < query_length - 1*Conf_interv | width(x_trim) > query_length + 2*Conf_interv), ]
-#to_remove <- x_trim[ ( width(x_trim) < mean_length - 1*Conf_interv | width(x_trim) > mean_length + 2*Conf_interv), ]
+to_remove <- x_trim[ ( width(x_trim) < mean_length - 10*Conf_interv | width(x_trim) > mean_length + 10*Conf_interv), ]
 
 length(to_remove)
 names(to_remove)
@@ -469,6 +473,8 @@ length(xtrim_no_outliers)
 # write fasta file of trimmed sequences
 writeXStringSet(xtrim_no_outliers, file=paste(ID_Folder, "/GB_csv_extracted.fasta", sep=""), append=FALSE, format="fasta") 
 
+rm("sequences")
+rm("sequences_ord")
 
 
 cmd2 <- paste("cat ",  ID_Folder, "/query_aligned_fasta.fasta ", ID_Folder, "/GB_csv_extracted.fasta > ",  ID_Folder, "/to_align.fasta", sep="")
@@ -497,13 +503,15 @@ alignment_file2 <- paste(ID_Folder, "/All_files_aligned.fasta", sep="")
  
 
 #rownames(align) <- sub("NFIS", ">>>>>>>>>> NFIS",rownames(align), ignore.case = FALSE)
+rownames(align) <- sub("^OM", ">>>>>> OM",rownames(align), ignore.case = FALSE)
+rownames(align) <- sub("^_OM", ">>>>>> ___OM",rownames(align), ignore.case = FALSE)
 #rownames(align) <- sub(".seq", ".seq <<<<<<<<<<",rownames(align), ignore.case = FALSE)
 # rownames(align) <- sub("_AY598", " REFERENCE STRAIN_AY598",rownames(align), ignore.case = FALSE)
 
 #rownames(align) <- sub("^Lev", ">>>>>>>>>> Lev",rownames(align), ignore.case = FALSE)
 #rownames(align) <- sub("PF$", "PF <<<<<<<<<<",rownames(align), ignore.case = FALSE)
 #rownames(align) <- sub("Pythium_nunn_CCTU", ">>>>> Pythium_nunn_CCTU",rownames(align), ignore.case = FALSE)
-rownames(align) <- sub("^gb", ">>>>>>>>>>>>> gb_",rownames(align), ignore.case = FALSE)
+#rownames(align) <- sub("^gb", ">>>>>>>>>>>>> gb_",rownames(align), ignore.case = FALSE)
 
   
   # raw distance is p-distance with substitution -> d: transition + transversion
@@ -517,29 +525,46 @@ rownames(align) <- sub("^gb", ">>>>>>>>>>>>> gb_",rownames(align), ignore.case =
 my_root <- which(rowSums(dm) == MaxV)
 # If this is a query sequence because of errors, this is a way to customize the choice based on GenBank number
 #
-#my_root <- grep("AY534144",rownames(align))
+#my_root <- grep("Saprolegnia",rownames(align))
  
-  dm <- dist.dna(align, model = "raw", pairwise.deletion = TRUE, as.matrix = TRUE)
-
-  tree <- njs(dm)
-
-write.tree(tree, file = paste(ID_Folder, "/nj_tree.newick", sep=""), append = FALSE, digits = 10, tree.names = FALSE)
-
+#  dm <- dist.dna(align, model = "raw", pairwise.deletion = TRUE, as.matrix = TRUE)
   
   # plot(max(unmatrix(dm, byrow = TRUE)), type="h")
   max(dm, na.rm = TRUE)
   nrow(dm)
   # write.table(dm, file = "dm.csv", append = FALSE, sep = ",", col.names = NA)
   
-  pdf(file = paste(ID_Folder, "/NJ_bionj_K80_tree_GenBank_and_ID_trimmed.pdf", sep=""), width = 8, height =24 )
+tree <- njs(dm)
+
+write.tree(tree, file = paste(ID_Folder, "/nj_tree.newick", sep=""), append = FALSE, digits = 10, tree.names = FALSE)
+#write.nexus(tree, file = paste(ID_Folder, "/nj_tree.nexus", sep=""))
+
+  pdf(file = paste(ID_Folder, "/NJ_bionj_K80_tree_GenBank_and_ID_trimmed.pdf", sep=""), width = 8, height =36 )
   # "0.5-((nrow(dm)-50)/500)" is a rough equation to remove 0.1 to cex factor for every 50 taxa to keep font size small enough for larger data
   # if you want to have longer branches, reduce x.lim by 0.1 increments
   #plot.phylo(type = "phylogram", root(tree, root[i], node = NULL, resolve.root = TRUE), font=1, cex = 0.5,  x.lim = 0.7)
   plot.phylo(type = "phylogram", root(tree, my_root[1], node = NULL, resolve.root = TRUE), font=1, 
-             cex = 0.54 - (sqrt(nrow(dm))/70),  x.lim = 0.07 + max(dm, na.rm = TRUE)/1.3, edge.width= 1.1 - (nrow(dm)/1200), no.margin=TRUE)
+             cex = 0.1,  x.lim = 0.07 + max(dm, na.rm = TRUE)/1.3, edge.width= 1.1 - (nrow(dm)/2000), no.margin=TRUE)
+  #           cex = 0.54 - (sqrt(nrow(dm))/110),  x.lim = 0.07 + max(dm, na.rm = TRUE)/1.3, edge.width= 1.1 - (nrow(dm)/2000), no.margin=TRUE)
+#cex = 0.54 - (sqrt(nrow(dm))/70),  x.lim = 0.07 + max(dm, na.rm = TRUE)/1.3, edge.width= 1.1 - (nrow(dm)/1200), no.margin=TRUE)
   title(main="", outer=FALSE, cex.main=1, font.main=2)
   dev.off()   
   
+packageVersion("ape")
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 #################################################
@@ -564,18 +589,6 @@ Closest_match <- data.frame(names(mins), mins, colnames(sub_dm)[mins_num_first],
 
 write.table(Closest_match, file = paste(ID_Folder, "/Closest distance matrix between DAOM and GenBank.csv", sep=""), append = FALSE, sep = ",", col.names = NA)
 write.xlsx(Closest_match, file = paste(ID_Folder, "/Closest distance matrix between DAOM and GenBank.xlsx", sep=""), sheetName="Sheet1", col.names=TRUE, row.names=TRUE, append=FALSE, showNA=TRUE)
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
