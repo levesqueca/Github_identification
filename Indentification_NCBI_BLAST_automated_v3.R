@@ -105,7 +105,7 @@ fit <- hclust(dm, method="average")
 
 # Number of groups based on NJ tree
 
-num_clades <- 12
+num_clades <- 10
 
 groups <-  cutree(fit, num_clades)
 group2 <- data.frame(names(groups), groups, stringsAsFactors = FALSE)
@@ -506,6 +506,7 @@ alignment_file2 <- paste(ID_Folder, "/All_files_aligned.fasta", sep="")
 #rownames(align) <- sub("NFIS", ">>>>>>>>>> NFIS",rownames(align), ignore.case = FALSE)
 rownames(align) <- sub("^OM", ">>>>>> OM",rownames(align), ignore.case = FALSE)
 rownames(align) <- sub("^_OM", ">>>>>> ___OM",rownames(align), ignore.case = FALSE)
+rownames(align) <- sub("^Herve", ">>>>>>>> Herve",rownames(align), ignore.case = FALSE)
 #rownames(align) <- sub(".seq", ".seq <<<<<<<<<<",rownames(align), ignore.case = FALSE)
 # rownames(align) <- sub("_AY598", " REFERENCE STRAIN_AY598",rownames(align), ignore.case = FALSE)
 
@@ -526,7 +527,7 @@ rownames(align) <- sub("^_OM", ">>>>>> ___OM",rownames(align), ignore.case = FAL
 my_root <- which(rowSums(dm) == MaxV)
 # If this is a query sequence because of errors, this is a way to customize the choice based on GenBank number
 #
-my_root <- grep("Achlya",rownames(align))
+#my_root <- grep("Achlya",rownames(align))
  
 #  dm <- dist.dna(align, model = "raw", pairwise.deletion = TRUE, as.matrix = TRUE)
   
