@@ -4,7 +4,7 @@ library("ape")
 # library(BSgenome)
 
 # folder where fasta file is (there should be only one)
-ID_Folder <- "Herve1"
+ID_Folder <- "Plant_Disease_note_2016"
 
 # # if I want to create my own fasta
 # dir.create(paste("", ID_Folder, sep=""), showWarnings = TRUE, recursive = FALSE)
@@ -105,7 +105,7 @@ fit <- hclust(dm, method="average")
 
 # Number of groups based on NJ tree
 
-num_clades <- 10
+num_clades <- 1
 
 groups <-  cutree(fit, num_clades)
 group2 <- data.frame(names(groups), groups, stringsAsFactors = FALSE)
@@ -507,6 +507,7 @@ alignment_file2 <- paste(ID_Folder, "/All_files_aligned.fasta", sep="")
 rownames(align) <- sub("^OM", ">>>>>> OM",rownames(align), ignore.case = FALSE)
 rownames(align) <- sub("^_OM", ">>>>>> ___OM",rownames(align), ignore.case = FALSE)
 rownames(align) <- sub("^Herve", ">>>>>>>> Herve",rownames(align), ignore.case = FALSE)
+rownames(align) <- sub("^1st", ">>>>>>>> 1st",rownames(align), ignore.case = FALSE)
 #rownames(align) <- sub(".seq", ".seq <<<<<<<<<<",rownames(align), ignore.case = FALSE)
 # rownames(align) <- sub("_AY598", " REFERENCE STRAIN_AY598",rownames(align), ignore.case = FALSE)
 
