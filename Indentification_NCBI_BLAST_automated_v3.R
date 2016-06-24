@@ -4,7 +4,7 @@ library("ape")
 # library(BSgenome)
 
 # folder where fasta file is (there should be only one)
-ID_Folder <- "Pseudozyma"
+ID_Folder <- "Plectospira"
 
 # # if I want to create my own fasta
 # dir.create(paste("", ID_Folder, sep=""), showWarnings = TRUE, recursive = FALSE)
@@ -105,7 +105,7 @@ fit <- hclust(dm, method="average")
 
 # Number of groups based on NJ tree
 
-num_clades <- 5
+num_clades <- 25
 
 groups <-  cutree(fit, num_clades)
 group2 <- data.frame(names(groups), groups, stringsAsFactors = FALSE)
@@ -235,10 +235,10 @@ j <- 1
 # http://www.ncbi.nlm.nih.gov/Taxonomy/Browser/wwwtax.cgi
 
 library("rentrez")
-#query <- "(Oomycetes[ORGN] AND (rRNA[Feature] OR misc_RNA[Feature])) NOT(environmental samples[organism] OR metagenomes[orgn] OR unidentified[orgn])"
+query <- "(Oomycetes[ORGN] AND (rRNA[Feature] OR misc_RNA[Feature])) NOT(environmental samples[organism] OR metagenomes[orgn] OR unidentified[orgn])"
 #query <- "(Oomycetes[ORGN] AND (cox1[gene] OR cytochrome[product] OR COI[gene])) NOT(Phytophthora[ORGN] OR environmental samples[organism] OR metagenomes[orgn] OR unidentified[orgn])"
 #query <- "(Oomycetes[ORGN] AND (cox2gene] OR cytochrome[product] OR COIIgene])) NOT(Phytophthora[ORGN] OR environmental samples[organism] OR metagenomes[orgn] OR unidentified[orgn])"
-query <- "(Ustilaginomycetes[ORGN] AND (rRNA[gene] OR 26S[gene] OR ribosomal[product]) NOT(environmental samples[organism] OR metagenomes[orgn] OR unidentified[orgn])"
+#query <- "(Ustilaginomycetes[ORGN] AND (rRNA[gene] OR 26S[gene] OR ribosomal[product]) NOT(environmental samples[organism] OR metagenomes[orgn] OR unidentified[orgn])"
 #query <- "(Viridiplantae[ORGN] AND (rcbl[gene] OR ribulose[product]) NOT(environmental samples[organism] OR metagenomes[orgn] OR unidentified[orgn])"
 
 
@@ -264,7 +264,7 @@ outfmt_cols <- c("qseqid","sallacc","pident","length","mismatch","gapopen","qsta
 # colnames(GB_Blast_table) <- c("query id", "subject_ids", " %identity", "alignment length", "mismatches", "gap opens", "q.start", " q.end", "s.start", "s.end", "evalue", " bit_score")
 
 cmd2 <- paste("/opt/bio/ncbi-blast+/bin/blastn -db /isilon/biodiversity/reference/ncbi/blastdb/reference/nt/nt -query ",
-              ID_Folder, "/GenBank/fasta_for_GenBank.fasta -max_target_seqs 500 -gilist ", ID_Folder, 
+              ID_Folder, "/GenBank/fasta_for_GenBank.fasta -max_target_seqs 200 -gilist ", ID_Folder, 
               "/GenBank/gilist.txt -gapopen 1 -gapextend 1 -xdrop_gap 30 -xdrop_gap_final 100 -dust no -outfmt '6 ", paste(outfmt_cols, collapse=" "), "' -out ",
               ID_Folder, "/GenBank/fasta_for_GenBank.fasta.out", sep="")
 system(cmd2)
@@ -506,10 +506,11 @@ alignment_file2 <- paste(ID_Folder, "/All_files_aligned.fasta", sep="")
  
 
 #rownames(align) <- sub("NFIS", ">>>>>>>>>> NFIS",rownames(align), ignore.case = FALSE)
-rownames(align) <- sub("^OM", ">>>>>> OM",rownames(align), ignore.case = FALSE)
-rownames(align) <- sub("^_OM", ">>>>>> ___OM",rownames(align), ignore.case = FALSE)
-rownames(align) <- sub("^Herve", ">>>>>>>> Herve",rownames(align), ignore.case = FALSE)
-rownames(align) <- sub("^1st", ">>>>>>>> 1st",rownames(align), ignore.case = FALSE)
+rownames(align) <- sub("LEV", ">>>>>>>>>> LEV",rownames(align), ignore.case = FALSE)
+#rownames(align) <- sub("^OM", ">>>>>> OM",rownames(align), ignore.case = FALSE)
+#rownames(align) <- sub("^_OM", ">>>>>> ___OM",rownames(align), ignore.case = FALSE)
+#rownames(align) <- sub("^Herve", ">>>>>>>> Herve",rownames(align), ignore.case = FALSE)
+#rownames(align) <- sub("^1st", ">>>>>>>> 1st",rownames(align), ignore.case = FALSE)
 #rownames(align) <- sub(".seq", ".seq <<<<<<<<<<",rownames(align), ignore.case = FALSE)
 # rownames(align) <- sub("_AY598", " REFERENCE STRAIN_AY598",rownames(align), ignore.case = FALSE)
 
