@@ -21,7 +21,7 @@ ID_fasta_files <- list.files(path = ID_Folder, pattern = "\\.fas$|\\.fasta$", re
 
 # Pick the right file(s)
 ID_fasta_files
-ID_fasta_files  <- ID_fasta_files[1]
+ID_fasta_files  <- ID_fasta_files[4]
 ID_fasta_files
 
 # makes a linsi command from this file with reorientation
@@ -557,6 +557,21 @@ write.tree(tree, file = paste(ID_Folder, "/nj_tree.newick", sep=""), append = FA
   dev.off()   
   
 packageVersion("ape")
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
