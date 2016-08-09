@@ -4,7 +4,7 @@ library("ape")
 # library(BSgenome)
 
 # folder where fasta file is (there should be only one)
-ID_Folder <- "Plectospira"
+ID_Folder <- "Plectospira_LSU"
 
 # # if I want to create my own fasta
 # dir.create(paste("", ID_Folder, sep=""), showWarnings = TRUE, recursive = FALSE)
@@ -21,7 +21,7 @@ ID_fasta_files <- list.files(path = ID_Folder, pattern = "\\.fas$|\\.fasta$", re
 
 # Pick the right file(s)
 ID_fasta_files
-ID_fasta_files  <- ID_fasta_files[4]
+ID_fasta_files  <- ID_fasta_files[1]
 ID_fasta_files
 
 # makes a linsi command from this file with reorientation
@@ -105,7 +105,7 @@ fit <- hclust(dm, method="average")
 
 # Number of groups based on NJ tree
 
-num_clades <- 25
+num_clades <- 2
 
 groups <-  cutree(fit, num_clades)
 group2 <- data.frame(names(groups), groups, stringsAsFactors = FALSE)
@@ -265,7 +265,8 @@ outfmt_cols <- c("qseqid","sallacc","pident","length","mismatch","gapopen","qsta
 
 cmd2 <- paste("/opt/bio/ncbi-blast+/bin/blastn -db /isilon/biodiversity/reference/ncbi/blastdb/reference/nt/nt -query ",
               ID_Folder, "/GenBank/fasta_for_GenBank.fasta -max_target_seqs 200 -gilist ", ID_Folder, 
-              "/GenBank/gilist.txt -gapopen 1 -gapextend 1 -xdrop_gap 30 -xdrop_gap_final 100 -dust no -outfmt '6 ", paste(outfmt_cols, collapse=" "), "' -out ",
+#              "/GenBank/gilist.txt -gapopen 1 -gapextend 1 -xdrop_gap 30 -xdrop_gap_final 100 -dust no -outfmt '6 ", paste(outfmt_cols, collapse=" "), "' -out ",
+              "/GenBank/gilist.txt -dust no -outfmt '6 ", paste(outfmt_cols, collapse=" "), "' -out ",
               ID_Folder, "/GenBank/fasta_for_GenBank.fasta.out", sep="")
 system(cmd2)
 
@@ -506,7 +507,7 @@ alignment_file2 <- paste(ID_Folder, "/All_files_aligned.fasta", sep="")
  
 
 #rownames(align) <- sub("NFIS", ">>>>>>>>>> NFIS",rownames(align), ignore.case = FALSE)
-rownames(align) <- sub("LEV", ">>>>>>>>>> LEV",rownames(align), ignore.case = FALSE)
+#rownames(align) <- sub("LEV", ">>>>>>>>>> LEV",rownames(align), ignore.case = FALSE)
 #rownames(align) <- sub("^OM", ">>>>>> OM",rownames(align), ignore.case = FALSE)
 #rownames(align) <- sub("^_OM", ">>>>>> ___OM",rownames(align), ignore.case = FALSE)
 #rownames(align) <- sub("^Herve", ">>>>>>>> Herve",rownames(align), ignore.case = FALSE)
@@ -550,8 +551,8 @@ write.tree(tree, file = paste(ID_Folder, "/nj_tree.newick", sep=""), append = FA
   # if you want to have longer branches, reduce x.lim by 0.1 increments
   #plot.phylo(type = "phylogram", root(tree, my_root[1], node = NULL, resolve.root = TRUE), font=1, cex = 0.5,  x.lim = 0.7)
   plot.phylo(type = "phylogram", root(tree, my_root[1], node = NULL, resolve.root = TRUE), font=1, 
-      #       cex = 0.1,  x.lim = 0.07 + max(dm, na.rm = TRUE)/1.3, edge.width= 1.1 - (nrow(dm)/2000), no.margin=TRUE)
-             cex = 0.54 - (sqrt(nrow(dm))/110),  x.lim = 0.07 + max(dm, na.rm = TRUE)/1.3, edge.width= 1.1 - (nrow(dm)/2000), no.margin=TRUE)
+       #      cex = 0.1,  x.lim = 0.07 + max(dm, na.rm = TRUE)/1.3, edge.width= 1.1 - (nrow(dm)/2000), no.margin=TRUE)
+            cex = 0.54 - (sqrt(nrow(dm))/110),  x.lim = 0.07 + max(dm, na.rm = TRUE)/1.0, edge.width= 1.1 - (nrow(dm)/2000), no.margin=TRUE)
 #cex = 0.54 - (sqrt(nrow(dm))/70),  x.lim = 0.07 + max(dm, na.rm = TRUE)/1.3, edge.width= 1.1 - (nrow(dm)/1200), no.margin=TRUE)
   title(main="", outer=FALSE, cex.main=1, font.main=2)
   dev.off()   
