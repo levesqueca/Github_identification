@@ -1,28 +1,45 @@
 dirlibrary(Biostrings)
-library("xlsx")
+#library("xlsx")
 library("ape")
 # library(BSgenome)
 
 # folder where fasta file is (there should be only one)
-ID_Folder <- "Plectospira_LSU"
+ID_Folder <- "Pseudozyma_ITS"
 
 # # if I want to create my own fasta
-# dir.create(paste("", ID_Folder, sep=""), showWarnings = TRUE, recursive = FALSE)
+##  dir.create(paste("", ID_Folder, sep=""), showWarnings = TRUE, recursive = FALSE)
 # 
 # sequences <- read.GenBank(c("AB499704","AY149173", "HQ643546","KP063131", "HQ643717"), species.names = TRUE,gene.names = FALSE,  as.character = TRUE)
-# 
+# # 
 # names(sequences) <- paste(attr(sequences,"species"), names(sequences), sep="_")
-# 
+# # 
 # write.dna(sequences, paste(ID_Folder, "/fasta_from_NCBI.fasta", sep=""), format = "fasta", append = FALSE)
 
-# finds fasta files
-ID_fasta_files <- list.files(path = ID_Folder, pattern = "\\.fas$|\\.fasta$", recursive = FALSE)
+###########
+#  If you need to combine some fasta files for the analysis
+##############################
+# finds fasta files with directory names
+ID_fasta_files <- list.files(path = ID_Folder, pattern = "\\.fas$|\\.fasta$", recursive = FALSE, full.names = TRUE)
 #ID_fasta_files <- list.files(path = ID_Folder, pattern = "fasta\\.fasta$", recursive = FALSE)
+# list files to pick the ones you need
+ID_fasta_files
 
-# Pick the right file(s)
+
+#Concatenate different fasta files (the unmbers are the ones you want to concatenate)
+cmd <- paste("cat ",  paste(ID_fasta_files[c(1:4)], collapse=" "), " > ",  ID_Folder, "/for_analysis.fasta", sep="")
+system(cmd)
+
+# you can use this if the concatenated file is the right one 
+ID_fasta_files <- "for_analysis.fasta"
+
+
+# or pick the right file from a list 
+ID_fasta_files <- list.files(path = ID_Folder, pattern = "\\.fas$|\\.fasta$", recursive = FALSE)
 ID_fasta_files
 ID_fasta_files  <- ID_fasta_files[1]
 ID_fasta_files
+
+
 
 # makes a linsi command from this file with reorientation
 # cmd <- paste("/opt/bio/mafft/bin/linsi --adjustdirection --auto --reorder  ",  ID_Folder, "/", ID_fasta_files, " > ", ID_Folder, "/", "query_aligned_fasta.fasta", sep = "")
@@ -105,7 +122,7 @@ fit <- hclust(dm, method="average")
 
 # Number of groups based on NJ tree
 
-num_clades <- 2
+num_clades <- 3
 
 groups <-  cutree(fit, num_clades)
 group2 <- data.frame(names(groups), groups, stringsAsFactors = FALSE)
@@ -171,6 +188,9 @@ dir.create(path= paste(ID_Folder, "/GenBank", sep=""), showWarnings = TRUE, recu
  
 i <- 1
 # writes fasta files from the text table created to calculate length.
+
+#if you have problems installing
+#install.packages('seqinr', repos='http://cran.us.r-project.org')
 library(seqinr)
 # for(i in 1:nrow(fasta_for_GenBank)) {
 # write.fasta(sequences = fasta_for_GenBank[i,2], names = rownames(fasta_for_GenBank)[i], nbchar = 80, 
@@ -235,10 +255,11 @@ j <- 1
 # http://www.ncbi.nlm.nih.gov/Taxonomy/Browser/wwwtax.cgi
 
 library("rentrez")
-query <- "(Oomycetes[ORGN] AND (rRNA[Feature] OR misc_RNA[Feature])) NOT(environmental samples[organism] OR metagenomes[orgn] OR unidentified[orgn])"
+#query <- "(Oomycetes[ORGN] AND (rRNA[Feature] OR misc_RNA[Feature])) NOT(environmental samples[organism] OR metagenomes[orgn] OR unidentified[orgn])"
 #query <- "(Oomycetes[ORGN] AND (cox1[gene] OR cytochrome[product] OR COI[gene])) NOT(Phytophthora[ORGN] OR environmental samples[organism] OR metagenomes[orgn] OR unidentified[orgn])"
 #query <- "(Oomycetes[ORGN] AND (cox2gene] OR cytochrome[product] OR COIIgene])) NOT(Phytophthora[ORGN] OR environmental samples[organism] OR metagenomes[orgn] OR unidentified[orgn])"
-#query <- "(Ustilaginomycetes[ORGN] AND (rRNA[gene] OR 26S[gene] OR ribosomal[product]) NOT(environmental samples[organism] OR metagenomes[orgn] OR unidentified[orgn])"
+query <- "(Ustilaginomycetes[ORGN] AND (rRNA[gene] OR 26S[gene] OR ribosomal[product]) NOT(environmental samples[organism] OR metagenomes[orgn] OR unidentified[orgn])"
+#query <- "(Ustilaginomycetes[ORGN] AND (elongation[gene] OR 26S[gene] OR elongation[product]) NOT(environmental samples[organism] OR metagenomes[orgn] OR unidentified[orgn])"
 #query <- "(Viridiplantae[ORGN] AND (rcbl[gene] OR ribulose[product]) NOT(environmental samples[organism] OR metagenomes[orgn] OR unidentified[orgn])"
 
 
@@ -456,11 +477,12 @@ mean_length <- mean(width(x_trim), trim=0.05)
 query_length <- mean(nchar(fasta_for_GenBank$align_txt))
 
 #Calculate a confidence interval based on all sequences
+install.packages('chemometrics', repos='http://cran.us.r-project.org')
 library("chemometrics")
 Conf_interv <- 2*sd_trim(width(x_trim), trim=0.05, const=FALSE)
 #show the sequences that will be removed
-to_remove <- x_trim[ ( width(x_trim) < query_length - 1*Conf_interv | width(x_trim) > query_length + 2*Conf_interv), ]
-to_remove <- x_trim[ ( width(x_trim) < mean_length - 10*Conf_interv | width(x_trim) > mean_length + 10*Conf_interv), ]
+to_remove <- x_trim[ ( width(x_trim) < query_length - 1*Conf_interv | width(x_trim) > query_length + 1*Conf_interv), ]
+#to_remove <- x_trim[ ( width(x_trim) < mean_length - 1*Conf_interv | width(x_trim) > mean_length + 1*Conf_interv), ]
 
 length(to_remove)
 names(to_remove)
@@ -518,7 +540,7 @@ alignment_file2 <- paste(ID_Folder, "/All_files_aligned.fasta", sep="")
 #rownames(align) <- sub("^Lev", ">>>>>>>>>> Lev",rownames(align), ignore.case = FALSE)
 #rownames(align) <- sub("PF$", "PF <<<<<<<<<<",rownames(align), ignore.case = FALSE)
 #rownames(align) <- sub("Pythium_nunn_CCTU", ">>>>> Pythium_nunn_CCTU",rownames(align), ignore.case = FALSE)
-#rownames(align) <- sub("^gb", ">>>>>>>>>>>>> gb_",rownames(align), ignore.case = FALSE)
+#rownames(align) <- sub("^gi", ">>>>>>>>>>>>> gi",rownames(align), ignore.case = FALSE)
 
   
   # raw distance is p-distance with substitution -> d: transition + transversion
@@ -532,7 +554,7 @@ alignment_file2 <- paste(ID_Folder, "/All_files_aligned.fasta", sep="")
 my_root <- which(rowSums(dm) == MaxV)
 # If this is a query sequence because of errors, this is a way to customize the choice based on GenBank number
 #
-#my_root <- grep("Achlya",rownames(align))
+my_root <- grep("Sporisorium",rownames(align))
  
 #  dm <- dist.dna(align, model = "raw", pairwise.deletion = TRUE, as.matrix = TRUE)
   
@@ -552,8 +574,9 @@ write.tree(tree, file = paste(ID_Folder, "/nj_tree.newick", sep=""), append = FA
   #plot.phylo(type = "phylogram", root(tree, my_root[1], node = NULL, resolve.root = TRUE), font=1, cex = 0.5,  x.lim = 0.7)
   plot.phylo(type = "phylogram", root(tree, my_root[1], node = NULL, resolve.root = TRUE), font=1, 
        #      cex = 0.1,  x.lim = 0.07 + max(dm, na.rm = TRUE)/1.3, edge.width= 1.1 - (nrow(dm)/2000), no.margin=TRUE)
-            cex = 0.54 - (sqrt(nrow(dm))/110),  x.lim = 0.07 + max(dm, na.rm = TRUE)/1.0, edge.width= 1.1 - (nrow(dm)/2000), no.margin=TRUE)
-#cex = 0.54 - (sqrt(nrow(dm))/70),  x.lim = 0.07 + max(dm, na.rm = TRUE)/1.3, edge.width= 1.1 - (nrow(dm)/1200), no.margin=TRUE)
+       #     cex = 0.54 - (sqrt(nrow(dm))/110),  x.lim = 0.07 + max(dm, na.rm = TRUE)/1.0, edge.width= 1.1 - (nrow(dm)/2000), no.margin=TRUE)
+           cex = 0.54 - (sqrt(nrow(dm))/90),  x.lim = 0.07 + max(dm, na.rm = TRUE)/1.0, edge.width= 1.1 - (nrow(dm)/2000), no.margin=TRUE)
+          #cex = 0.54 - (sqrt(nrow(dm))/70),  x.lim = 0.07 + max(dm, na.rm = TRUE)/1.3, edge.width= 1.1 - (nrow(dm)/1200), no.margin=TRUE)
   title(main="", outer=FALSE, cex.main=1, font.main=2)
   dev.off()   
   
