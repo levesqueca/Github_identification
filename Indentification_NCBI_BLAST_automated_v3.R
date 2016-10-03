@@ -1,10 +1,10 @@
 dirlibrary(Biostrings)
-#library("xlsx")
+library("xlsx")
 library("ape")
 # library(BSgenome)
 
 # folder where fasta file is (there should be only one)
-ID_Folder <- "Pseudozyma_ITS"
+ID_Folder <- "P_bilaiae_ITS"
 
 # # if I want to create my own fasta
 ##  dir.create(paste("", ID_Folder, sep=""), showWarnings = TRUE, recursive = FALSE)
@@ -122,7 +122,7 @@ fit <- hclust(dm, method="average")
 
 # Number of groups based on NJ tree
 
-num_clades <- 3
+num_clades <- 1
 
 groups <-  cutree(fit, num_clades)
 group2 <- data.frame(names(groups), groups, stringsAsFactors = FALSE)
@@ -258,9 +258,10 @@ library("rentrez")
 #query <- "(Oomycetes[ORGN] AND (rRNA[Feature] OR misc_RNA[Feature])) NOT(environmental samples[organism] OR metagenomes[orgn] OR unidentified[orgn])"
 #query <- "(Oomycetes[ORGN] AND (cox1[gene] OR cytochrome[product] OR COI[gene])) NOT(Phytophthora[ORGN] OR environmental samples[organism] OR metagenomes[orgn] OR unidentified[orgn])"
 #query <- "(Oomycetes[ORGN] AND (cox2gene] OR cytochrome[product] OR COIIgene])) NOT(Phytophthora[ORGN] OR environmental samples[organism] OR metagenomes[orgn] OR unidentified[orgn])"
-query <- "(Ustilaginomycetes[ORGN] AND (rRNA[gene] OR 26S[gene] OR ribosomal[product]) NOT(environmental samples[organism] OR metagenomes[orgn] OR unidentified[orgn])"
+#query <- "(Ustilaginomycetes[ORGN] AND (rRNA[gene] OR 26S[gene] OR ribosomal[product]) NOT(environmental samples[organism] OR metagenomes[orgn] OR unidentified[orgn])"
 #query <- "(Ustilaginomycetes[ORGN] AND (elongation[gene] OR 26S[gene] OR elongation[product]) NOT(environmental samples[organism] OR metagenomes[orgn] OR unidentified[orgn])"
 #query <- "(Viridiplantae[ORGN] AND (rcbl[gene] OR ribulose[product]) NOT(environmental samples[organism] OR metagenomes[orgn] OR unidentified[orgn])"
+query <- "(Penicillium[ORGN] AND (rRNA[gene] OR 26S[gene] OR ribosomal[product]) NOT(environmental samples[organism] OR metagenomes[orgn] OR unidentified[orgn])"
 
 
 
@@ -357,6 +358,9 @@ colnames(GB_Blast_table)[2] <- "GB_accession"
 
 unique_GB <- unique(GB_Blast_table$GB_accession)
 
+write.table(unique_GB, file = paste(ID_Folder,"/unique_GB.csv",sep=""), append = FALSE, sep = ",", col.names = NA)
+
+
 # removes the decimal points on GenBank accessions as these caused a faiolure to retrieve files
 # unique_GB <- sub("\\.\\d+$", "", unique(GB_Blast_table$GB_accession), ignore.case = FALSE, perl = FALSE)
 
@@ -444,7 +448,7 @@ dataset2[sapply(dataset2, is.list)] <-
   sapply(dataset2[sapply(dataset2, is.list)], 
          function(x)sapply(x, function(y) paste(unlist(y),collapse=", ") ) )
 
-write.xlsx(dataset2, file = paste(ID_Folder, "/to check BLAST results table.xlsx", sep=""), sheetName="Sheet1", col.names=TRUE, row.names=TRUE, append=FALSE, showNA=TRUE)
+#write.xlsx(dataset2, file = paste(ID_Folder, "/to check BLAST results table.xlsx", sep=""), sheetName="Sheet1", col.names=TRUE, row.names=TRUE, append=FALSE, showNA=TRUE)
 # 
 
 
@@ -477,9 +481,9 @@ mean_length <- mean(width(x_trim), trim=0.05)
 query_length <- mean(nchar(fasta_for_GenBank$align_txt))
 
 #Calculate a confidence interval based on all sequences
-install.packages('chemometrics', repos='http://cran.us.r-project.org')
+#install.packages('chemometrics', repos='http://cran.us.r-project.org')
 library("chemometrics")
-Conf_interv <- 2*sd_trim(width(x_trim), trim=0.05, const=FALSE)
+Conf_interv <- 3*sd_trim(width(x_trim), trim=0.05, const=FALSE)
 #show the sequences that will be removed
 to_remove <- x_trim[ ( width(x_trim) < query_length - 1*Conf_interv | width(x_trim) > query_length + 1*Conf_interv), ]
 #to_remove <- x_trim[ ( width(x_trim) < mean_length - 1*Conf_interv | width(x_trim) > mean_length + 1*Conf_interv), ]
@@ -554,7 +558,7 @@ alignment_file2 <- paste(ID_Folder, "/All_files_aligned.fasta", sep="")
 my_root <- which(rowSums(dm) == MaxV)
 # If this is a query sequence because of errors, this is a way to customize the choice based on GenBank number
 #
-my_root <- grep("Sporisorium",rownames(align))
+#my_root <- grep("Sporisorium",rownames(align))
  
 #  dm <- dist.dna(align, model = "raw", pairwise.deletion = TRUE, as.matrix = TRUE)
   
