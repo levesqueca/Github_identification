@@ -3,7 +3,7 @@ library("xlsx")
 library("ape")
 # library(BSgenome)
 
-# folder where fasta file is (there should be only one)
+# folder where fasta file is (there should be only one) 
 
 
 # TO work on shared folder
