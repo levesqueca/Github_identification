@@ -4,12 +4,20 @@ library("ape")
 # library(BSgenome)
 
 # folder where fasta file is (there should be only one)
-ID_Folder <- "P_bilaiae_ITS"
+
+
+# TO work on shared folder
+sharedPath   <- "/isilon/biodiversity/users/shared/Phytophthora_ID/"
+ID_Folder <- paste(sharedPath,"Alejandro_CO1",sep="")
+setwd(sharedPath)
+getwd()
+
 
 # # if I want to create my own fasta
 ##  dir.create(paste("", ID_Folder, sep=""), showWarnings = TRUE, recursive = FALSE)
 # 
 # sequences <- read.GenBank(c("AB499704","AY149173", "HQ643546","KP063131", "HQ643717"), species.names = TRUE,gene.names = FALSE,  as.character = TRUE)
+
 # # 
 # names(sequences) <- paste(attr(sequences,"species"), names(sequences), sep="_")
 # # 
@@ -20,6 +28,7 @@ ID_Folder <- "P_bilaiae_ITS"
 ##############################
 # finds fasta files with directory names
 ID_fasta_files <- list.files(path = ID_Folder, pattern = "\\.fas$|\\.fasta$", recursive = FALSE, full.names = TRUE)
+ID_fasta_files <- list.files(path = ID_Folder, pattern = "\\.fas$|\\.fasta$", recursive = FALSE, full.names = FALSE)
 #ID_fasta_files <- list.files(path = ID_Folder, pattern = "fasta\\.fasta$", recursive = FALSE)
 # list files to pick the ones you need
 ID_fasta_files
@@ -36,7 +45,7 @@ ID_fasta_files <- "for_analysis.fasta"
 # or pick the right file from a list 
 ID_fasta_files <- list.files(path = ID_Folder, pattern = "\\.fas$|\\.fasta$", recursive = FALSE)
 ID_fasta_files
-ID_fasta_files  <- ID_fasta_files[1]
+ID_fasta_files  <- ID_fasta_files[6]
 ID_fasta_files
 
 
@@ -45,7 +54,7 @@ ID_fasta_files
 # cmd <- paste("/opt/bio/mafft/bin/linsi --adjustdirection --auto --reorder  ",  ID_Folder, "/", ID_fasta_files, " > ", ID_Folder, "/", "query_aligned_fasta.fasta", sep = "")
 
 # makes a linsi command from this file without  reorientation
-cmd <- paste("/opt/bio/mafft/bin/linsi --reorder '",  ID_Folder, "/", ID_fasta_files, "' > ", ID_Folder, "/", "query_aligned_fasta.fasta", sep = "")
+cmd <- paste("/opt/bio/mafft/bin/linsi --reorder --quiet '",  ID_Folder, "/", ID_fasta_files, "' > ", ID_Folder, "/", "query_aligned_fasta.fasta", sep = "")
 
 
 # runs the command on the linux server
@@ -122,7 +131,7 @@ fit <- hclust(dm, method="average")
 
 # Number of groups based on NJ tree
 
-num_clades <- 1
+num_clades <- 15
 
 groups <-  cutree(fit, num_clades)
 group2 <- data.frame(names(groups), groups, stringsAsFactors = FALSE)
@@ -255,13 +264,18 @@ j <- 1
 # http://www.ncbi.nlm.nih.gov/Taxonomy/Browser/wwwtax.cgi
 
 library("rentrez")
+#query <- "(Oomycetes[ORGN] AND (tubulin[gene] OR tubulin[product])) NOT(environmental samples[organism] OR metagenomes[orgn] OR unidentified[orgn])"
 #query <- "(Oomycetes[ORGN] AND (rRNA[Feature] OR misc_RNA[Feature])) NOT(environmental samples[organism] OR metagenomes[orgn] OR unidentified[orgn])"
-#query <- "(Oomycetes[ORGN] AND (cox1[gene] OR cytochrome[product] OR COI[gene])) NOT(Phytophthora[ORGN] OR environmental samples[organism] OR metagenomes[orgn] OR unidentified[orgn])"
+#query <- "((Stramenopiles[ORG] NOT Oomycetes[ORGN]) AND (rRNA[Feature] OR misc_RNA[Feature])) NOT(environmental samples[organism] OR metagenomes[orgn] OR unidentified[orgn])"
+query <- "(Oomycetes[ORGN] AND (cox1[gene] OR cytochrome[product] OR COI[gene])) NOT(environmental samples[organism] OR metagenomes[orgn] OR unidentified[orgn])"
 #query <- "(Oomycetes[ORGN] AND (cox2gene] OR cytochrome[product] OR COIIgene])) NOT(Phytophthora[ORGN] OR environmental samples[organism] OR metagenomes[orgn] OR unidentified[orgn])"
 #query <- "(Ustilaginomycetes[ORGN] AND (rRNA[gene] OR 26S[gene] OR ribosomal[product]) NOT(environmental samples[organism] OR metagenomes[orgn] OR unidentified[orgn])"
+#query <- "(Fungi[ORGN] AND (rRNA[gene] OR 26S[gene] OR ribosomal[product]) NOT(environmental samples[organism] OR metagenomes[orgn] OR unidentified[orgn])"
+
 #query <- "(Ustilaginomycetes[ORGN] AND (elongation[gene] OR 26S[gene] OR elongation[product]) NOT(environmental samples[organism] OR metagenomes[orgn] OR unidentified[orgn])"
+#query <- "(Viridiplantae[ORGN] AND (rRNA[Feature] OR misc_RNA[Feature])) NOT(environmental samples[organism] OR metagenomes[orgn] OR unidentified[orgn])"
 #query <- "(Viridiplantae[ORGN] AND (rcbl[gene] OR ribulose[product]) NOT(environmental samples[organism] OR metagenomes[orgn] OR unidentified[orgn])"
-query <- "(Penicillium[ORGN] AND (rRNA[gene] OR 26S[gene] OR ribosomal[product]) NOT(environmental samples[organism] OR metagenomes[orgn] OR unidentified[orgn])"
+#query <- "(Penicillium[ORGN] AND (rRNA[gene] OR 26S[gene] OR ribosomal[product]) NOT(environmental samples[organism] OR metagenomes[orgn] OR unidentified[orgn])"
 
 
 
@@ -317,8 +331,7 @@ system(cmd2)
 ###############################################################
 
 
-
-GB_Blast_table <- read.table(paste(ID_Folder, "/GenBank/fasta_for_GenBank.fasta.out", sep=""),header=FALSE, stringsAsFactors=FALSE)
+GB_Blast_table <- read.table(paste(ID_Folder, "/GenBank/fasta_for_GenBank.fasta.out", sep=""), sep="\t", comment.char = "#",header=FALSE, stringsAsFactors=FALSE)
 #GB_Blast_table <- read.csv(paste(ID_Folder, "/GenBank/fasta_for_GenBank.fasta.out", sep=""),header=FALSE)
 
 #colnames(GB_Blast_table) <- outfmt_cols
@@ -364,8 +377,53 @@ write.table(unique_GB, file = paste(ID_Folder,"/unique_GB.csv",sep=""), append =
 # removes the decimal points on GenBank accessions as these caused a faiolure to retrieve files
 # unique_GB <- sub("\\.\\d+$", "", unique(GB_Blast_table$GB_accession), ignore.case = FALSE, perl = FALSE)
 
+library(ape)
 
-sequences <- read.GenBank(unique_GB, seq.names = unique_GB,  species.names = TRUE,gene.names = FALSE,  as.character = TRUE)
+source("read.GBxml.R")
+
+sequences <- read.GBxml(access.nb = unique_GB)
+
+
+
+#sequences <- read.GenBank(unique_GB, seq.names = unique_GB,  species.names = TRUE, gene.names = FALSE,  as.character = TRUE)
+
+# sequences <- read.GenBank(c("AB499704","AY149173", "HQ643546","KP063131", "HQ643717"), species.names = TRUE,gene.names = FALSE,  as.character = TRUE)
+# 
+# packageVersion("ape")
+# packageVersion("biojava-legacy")
+# packageVersion("reutils")
+# R.Version()
+# 
+# 
+# sequences <- read.GenBank(c("AB499704","AY149173", "HQ643546","KP063131", "HQ643717"), species.names = TRUE,gene.names = FALSE,  as.character = TRUE)
+# library(reutils)
+# efetch("527031", "taxonomy")
+# install.packages("reutils")
+# install.packages('devtools', repos='https://github.com/gschofl/reutils/R')
+# install.packages('curl')
+# require("devtools")
+# install.packages('reutils', repos='http://cran.us.r-project.org')
+# install_github("gschofl/reutils")
+# https://github.com/gschofl/reutils
+# # 
+# install.packages('reutils', repos='http://cran.us.r-project.org')
+# library('reutils')
+# # 
+# devtools::install_github("gschofl/biofiles")
+# # 
+# gb_file <- efetch("KJ639177", db = "nuccore", rettype = "gbwithparts", retmode = "text")
+# rec <- gbRecord(gb_file)
+# summary(a)
+# 
+# 
+# # install.packages('adegenet', repos='http://cran.us.r-project.org')
+# install.packages('spider', repos='http://cran.us.r-project.org')
+# library("spider")
+# # 
+# RG2 <- read.GB("KJ639177")
+# RG1 <- read.GenBank("KJ639177")
+# 
+# wget -q -O temporaryfile "http://www.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?db=nuccore&id=JN225528&rettype=gb&retmode=text" ; sed 's/^ *\//%/;s/ */ /;s/TITLE/%TITLE/;s/JOURNAL/%J/' temporaryfile | tr -d "\n"| tr "%" "\n" | grep -e "isolation_source" -e TITLE
 
 # sequences <- read.GenBank(unique(GB_Blast_table$GB_accession),  seq.names = unique(GB_Blast_table$GB_accession),
 #                
@@ -377,19 +435,45 @@ sequences <- read.GenBank(unique_GB, seq.names = unique_GB,  species.names = TRU
 # sequences[[1]]
 # names(sequences)[1]
 
+# Because read.GenBank does not work
+#created a script entitled "fetch_ncbi_sequences.R" that does work from the windows Rstudio
+
+
 sequences_ord <- sequences[order(names(sequences))] 
 names(sequences_ord)[1]
+
+names(attributes(sequences))
 attr(sequences, "species")
+attr(sequences, "country")
 
 #sequences_ord[[1]]
 
-full_names <- data.frame(attr(sequences, "species"),names(sequences), stringsAsFactors = FALSE)
+full_names <- data.frame(attr(sequences, "species"), names(sequences),  attr(sequences, "accession_num"), attr(sequences, "strain"), attr(sequences, "host"), attr(sequences, "country"), stringsAsFactors = FALSE)
 
-full_names$SpStrain <-  do.call(paste, c(full_names[1:2], sep="_"))
+temp_names <-  do.call(paste, c(full_names[c(1,2,4,5,6)], sep="|"))
+
+temp_names <- gsub(" ","_",temp_names)
+temp_names <- gsub("\\.","\\_",temp_names)
+temp_names <- gsub("\\/","\\_",temp_names)
+temp_names <- gsub("\\:","\\_",temp_names)
+temp_names <- gsub("\\;","\\_",temp_names)
+temp_names <- gsub("\\,","\\_",temp_names)
+temp_names <- gsub("\\-","\\_",temp_names)
+temp_names <- gsub("__","_",temp_names)
+temp_names <- gsub("__","_",temp_names)
+temp_names <- gsub("\\_$","",temp_names)
+
+full_names$SpStrain <- temp_names
+
+
 
 full_names_ord <- full_names[order(full_names$names.sequences.),] 
 
 nrow(full_names_ord)
+
+#write.dna(sequences_ord, paste(ID_Folder, "/fasta_from_NCBI_ord.fasta", sep=""), format = "fasta", append = FALSE)
+
+length(unique(names(sequences_ord)))
 
 # sequences.bin <- as.DNAbin(sequences)
 
@@ -400,6 +484,8 @@ for(i in 1:length(sequences_ord)) {
   names(temp) <- full_names_ord$SpStrain[i]
   GB_DNAstring <- c(GB_DNAstring,temp)
 } 
+
+#load(paste(sharedPath,"ITS/GB_DNAstring.Rdata", sep=""))
 
 
 # Creates a +/- column for orientation of sequences
@@ -481,9 +567,11 @@ mean_length <- mean(width(x_trim), trim=0.05)
 query_length <- mean(nchar(fasta_for_GenBank$align_txt))
 
 #Calculate a confidence interval based on all sequences
-#install.packages('chemometrics', repos='http://cran.us.r-project.org')
+
+
 library("chemometrics")
-Conf_interv <- 3*sd_trim(width(x_trim), trim=0.05, const=FALSE)
+SDX <- 5
+Conf_interv <- SDX*sd_trim(width(x_trim), trim=0.05, const=FALSE)
 #show the sequences that will be removed
 to_remove <- x_trim[ ( width(x_trim) < query_length - 1*Conf_interv | width(x_trim) > query_length + 1*Conf_interv), ]
 #to_remove <- x_trim[ ( width(x_trim) < mean_length - 1*Conf_interv | width(x_trim) > mean_length + 1*Conf_interv), ]
@@ -508,13 +596,15 @@ rm("sequences_ord")
 
 
 cmd2 <- paste("cat ",  ID_Folder, "/query_aligned_fasta.fasta ", ID_Folder, "/GB_csv_extracted.fasta > ",  ID_Folder, "/to_align.fasta", sep="")
-
+#cmd2 <- paste("cat ",  ID_Folder, "/my_sequences_with_metadata.fasta ", ID_Folder, "/GB_csv_extracted.fasta > ",  ID_Folder, "/to_align.fasta", sep="")
 system(cmd2)
 
 
 
+
+
 #cmd3 <- paste("/opt/bio/mafft/bin/mafft --auto --reorder ",  ID_Folder, "/GB_csv_extracted.fasta > ", ID_Folder, "/All_files_aligned.fasta", sep="")
-cmd3 <- paste("/opt/bio/mafft/bin/mafft --auto --reorder ",  ID_Folder, "/to_align.fasta > ", ID_Folder, "/All_files_aligned.fasta", sep="")
+cmd3 <- paste("/opt/bio/mafft/bin/mafft --auto --reorder --quiet ",  ID_Folder, "/to_align.fasta > ", ID_Folder, "/All_files_aligned.fasta", sep="")
 
 system(cmd3)
 
@@ -548,9 +638,10 @@ alignment_file2 <- paste(ID_Folder, "/All_files_aligned.fasta", sep="")
 
   
   # raw distance is p-distance with substitution -> d: transition + transversion
-  dm <- dist.dna(align, model = "raw", pairwise.deletion = TRUE, as.matrix = TRUE)
+dm <- dist.dna(align, model = "raw", pairwise.deletion = TRUE, as.matrix = TRUE)
+       #dm <- dist.dna(align, model = "raw", pairwise.deletion = FALSE, as.matrix = TRUE)
   
-  MaxV <- max(rowSums(dm), na.rm = TRUE)
+MaxV <- max(rowSums(dm), na.rm = TRUE)
 
 
 
@@ -558,7 +649,7 @@ alignment_file2 <- paste(ID_Folder, "/All_files_aligned.fasta", sep="")
 my_root <- which(rowSums(dm) == MaxV)
 # If this is a query sequence because of errors, this is a way to customize the choice based on GenBank number
 #
-#my_root <- grep("Sporisorium",rownames(align))
+# my_root <- grep("Phytopythium",rownames(align))
  
 #  dm <- dist.dna(align, model = "raw", pairwise.deletion = TRUE, as.matrix = TRUE)
   
@@ -572,15 +663,15 @@ tree <- njs(dm)
 write.tree(tree, file = paste(ID_Folder, "/nj_tree.newick", sep=""), append = FALSE, digits = 15, tree.names = FALSE)
 #write.nexus(tree, file = paste(ID_Folder, "/nj_tree.nexus", sep=""))
 
-  pdf(file = paste(ID_Folder, "/NJ_bionj_K80_tree_GenBank_and_ID_trimmed.pdf", sep=""), width = 8, height =36 )
+  pdf(file = paste(ID_Folder, "/NJ_bionj_K80_tree_GenBank_and_ID_trimmed.pdf", sep=""), width = 8, height =64 )
   # "0.5-((nrow(dm)-50)/500)" is a rough equation to remove 0.1 to cex factor for every 50 taxa to keep font size small enough for larger data
   # if you want to have longer branches, reduce x.lim by 0.1 increments
   #plot.phylo(type = "phylogram", root(tree, my_root[1], node = NULL, resolve.root = TRUE), font=1, cex = 0.5,  x.lim = 0.7)
   plot.phylo(type = "phylogram", root(tree, my_root[1], node = NULL, resolve.root = TRUE), font=1, 
        #      cex = 0.1,  x.lim = 0.07 + max(dm, na.rm = TRUE)/1.3, edge.width= 1.1 - (nrow(dm)/2000), no.margin=TRUE)
-       #     cex = 0.54 - (sqrt(nrow(dm))/110),  x.lim = 0.07 + max(dm, na.rm = TRUE)/1.0, edge.width= 1.1 - (nrow(dm)/2000), no.margin=TRUE)
-           cex = 0.54 - (sqrt(nrow(dm))/90),  x.lim = 0.07 + max(dm, na.rm = TRUE)/1.0, edge.width= 1.1 - (nrow(dm)/2000), no.margin=TRUE)
-          #cex = 0.54 - (sqrt(nrow(dm))/70),  x.lim = 0.07 + max(dm, na.rm = TRUE)/1.3, edge.width= 1.1 - (nrow(dm)/1200), no.margin=TRUE)
+            cex = 0.54 - (sqrt(nrow(dm))/100),  x.lim = 0.07 + max(dm, na.rm = TRUE)/1.0, edge.width= 1.1 - (nrow(dm)/2500), no.margin=TRUE)
+            #cex = 0.54 - (sqrt(nrow(dm))/90),  x.lim = 0.07 + max(dm, na.rm = TRUE)/1.0, edge.width= 1.1 - (nrow(dm)/2000), no.margin=TRUE)
+         # cex = 0.54 - (sqrt(nrow(dm))/70),  x.lim = 0.07 + max(dm, na.rm = TRUE)/1.3, edge.width= 1.1 - (nrow(dm)/1200), no.margin=TRUE)
   title(main="", outer=FALSE, cex.main=1, font.main=2)
   dev.off()   
   
