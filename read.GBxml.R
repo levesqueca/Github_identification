@@ -1,5 +1,5 @@
 read.GBxml <-
-function (access.nb) 
+function (access.nb, database) 
 {
   library(XML)
   library(RCurl)
@@ -16,7 +16,7 @@ function (access.nb)
       b <- N
 
 # André changed HTTPs here
-    URL <- paste("https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?db=nucleotide&id=",
+    URL <- paste("https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?db=",database,"id=",
                  paste(access.nb[a:b], collapse = ","),
                  "&rettype=gb&retmode=xml", sep = "")
    dfX <- bind_rows(dfX,  xmlToDataFrame(getURL(URL), colClasses = NULL, homogeneous = NA,

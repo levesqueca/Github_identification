@@ -7,8 +7,8 @@ library("ape")
 
 
 # TO work on shared folder
-sharedPath   <- "/isilon/biodiversity/users/shared/Phytophthora_ID/"
-ID_Folder <- paste(sharedPath,"Alejandro_CO1",sep="")
+sharedPath   <- "/isilon/biodiversity/users/shared/Pythium_metagenomics/"
+ID_Folder <- paste(sharedPath,"Identification",sep="")
 setwd(sharedPath)
 getwd()
 
@@ -45,7 +45,7 @@ ID_fasta_files <- "for_analysis.fasta"
 # or pick the right file from a list 
 ID_fasta_files <- list.files(path = ID_Folder, pattern = "\\.fas$|\\.fasta$", recursive = FALSE)
 ID_fasta_files
-ID_fasta_files  <- ID_fasta_files[6]
+ID_fasta_files  <- ID_fasta_files[11]
 ID_fasta_files
 
 
@@ -96,8 +96,8 @@ pdf(file = paste(ID_Folder, "/", "NJ_tree_of_ID.pdf", sep =""), width = 8, heigh
 # if you want to have longer branches, reduce x.lim by 0.1 increments
 #plot.phylo(type = "phylogram", root(tree, root[i], node = NULL, resolve.root = TRUE), font=1, cex = 0.5,  x.lim = 0.7)
 plot.phylo(type = "phylogram", root(tree, my_root[1], node = NULL, resolve.root = TRUE), font=1, 
-         #  cex = 0.52 - (sqrt(nrow(dm))/70),  x.lim = 0.07 + max(dm, na.rm = TRUE)/1.3, edge.width= 1.1 - (nrow(dm)/1200), no.margin=TRUE)
-           cex = 0.52,  x.lim = 1 , edge.width= 1.1 , no.margin=TRUE)
+          cex = 0.52 - (sqrt(nrow(dm))/100),  x.lim = 0.07 + max(dm, na.rm = TRUE)/1.3, edge.width= 1.1 - (nrow(dm)/2000), no.margin=TRUE)
+          # cex = 0.52,  x.lim = 1 , edge.width= 1.1 , no.margin=TRUE)
 title(main="NJ", outer=FALSE, cex.main=1, font.main=2)
 dev.off()   
 
@@ -131,7 +131,7 @@ fit <- hclust(dm, method="average")
 
 # Number of groups based on NJ tree
 
-num_clades <- 15
+num_clades <- 4
 
 groups <-  cutree(fit, num_clades)
 group2 <- data.frame(names(groups), groups, stringsAsFactors = FALSE)
@@ -169,7 +169,7 @@ sapply(group3, class)
 
 #fasta_for_GenBank <- seq_no_gaps[[names=unique_ID]]
 
-
+#rownames(group3) <- group3[,1]
 
 fasta_for_GenBank <- group3[maxima_by_group,c(1,4)]
 # fasta_for_GenBank_seq <- fasta_for_GenBank_df[,2]
@@ -265,9 +265,9 @@ j <- 1
 
 library("rentrez")
 #query <- "(Oomycetes[ORGN] AND (tubulin[gene] OR tubulin[product])) NOT(environmental samples[organism] OR metagenomes[orgn] OR unidentified[orgn])"
-#query <- "(Oomycetes[ORGN] AND (rRNA[Feature] OR misc_RNA[Feature])) NOT(environmental samples[organism] OR metagenomes[orgn] OR unidentified[orgn])"
+query <- "(Oomycetes[ORGN] AND (rRNA[Feature] OR misc_RNA[Feature])) NOT(environmental samples[organism] OR metagenomes[orgn] OR unidentified[orgn])"
 #query <- "((Stramenopiles[ORG] NOT Oomycetes[ORGN]) AND (rRNA[Feature] OR misc_RNA[Feature])) NOT(environmental samples[organism] OR metagenomes[orgn] OR unidentified[orgn])"
-query <- "(Oomycetes[ORGN] AND (cox1[gene] OR cytochrome[product] OR COI[gene])) NOT(environmental samples[organism] OR metagenomes[orgn] OR unidentified[orgn])"
+#query <- "(Oomycetes[ORGN] AND (cox1[gene] OR cytochrome[product] OR COI[gene])) NOT(environmental samples[organism] OR metagenomes[orgn] OR unidentified[orgn])"
 #query <- "(Oomycetes[ORGN] AND (cox2gene] OR cytochrome[product] OR COIIgene])) NOT(Phytophthora[ORGN] OR environmental samples[organism] OR metagenomes[orgn] OR unidentified[orgn])"
 #query <- "(Ustilaginomycetes[ORGN] AND (rRNA[gene] OR 26S[gene] OR ribosomal[product]) NOT(environmental samples[organism] OR metagenomes[orgn] OR unidentified[orgn])"
 #query <- "(Fungi[ORGN] AND (rRNA[gene] OR 26S[gene] OR ribosomal[product]) NOT(environmental samples[organism] OR metagenomes[orgn] OR unidentified[orgn])"
@@ -300,9 +300,11 @@ outfmt_cols <- c("qseqid","sallacc","pident","length","mismatch","gapopen","qsta
 # colnames(GB_Blast_table) <- c("query id", "subject_ids", " %identity", "alignment length", "mismatches", "gap opens", "q.start", " q.end", "s.start", "s.end", "evalue", " bit_score")
 
 cmd2 <- paste("/opt/bio/ncbi-blast+/bin/blastn -db /isilon/biodiversity/reference/ncbi/blastdb/reference/nt/nt -query ",
-              ID_Folder, "/GenBank/fasta_for_GenBank.fasta -max_target_seqs 200 -gilist ", ID_Folder, 
+              ID_Folder, "/GenBank/fasta_for_GenBank.fasta -max_target_seqs 50 ", 
+#              ID_Folder, "/GenBank/fasta_for_GenBank.fasta -max_target_seqs 50 -gilist ", ID_Folder, 
 #              "/GenBank/gilist.txt -gapopen 1 -gapextend 1 -xdrop_gap 30 -xdrop_gap_final 100 -dust no -outfmt '6 ", paste(outfmt_cols, collapse=" "), "' -out ",
-              "/GenBank/gilist.txt -dust no -outfmt '6 ", paste(outfmt_cols, collapse=" "), "' -out ",
+#              "/GenBank/gilist.txt -dust no -outfmt '6 ", paste(outfmt_cols, collapse=" "), "' -out ",
+               " -dust no -outfmt '6 ", paste(outfmt_cols, collapse=" "), "' -out ",
               ID_Folder, "/GenBank/fasta_for_GenBank.fasta.out", sep="")
 system(cmd2)
 
@@ -379,7 +381,7 @@ write.table(unique_GB, file = paste(ID_Folder,"/unique_GB.csv",sep=""), append =
 
 library(ape)
 
-source("read.GBxml.R")
+source("/isilon/biodiversity/users/shared/Phytophthora_ID/read.GBxml.R")
 
 sequences <- read.GBxml(access.nb = unique_GB)
 
@@ -451,6 +453,7 @@ attr(sequences, "country")
 full_names <- data.frame(attr(sequences, "species"), names(sequences),  attr(sequences, "accession_num"), attr(sequences, "strain"), attr(sequences, "host"), attr(sequences, "country"), stringsAsFactors = FALSE)
 
 temp_names <-  do.call(paste, c(full_names[c(1,2,4,5,6)], sep="|"))
+#temp_names <-  do.call(paste, c(full_names[c(1,2,4)], sep="|"))
 
 temp_names <- gsub(" ","_",temp_names)
 temp_names <- gsub("\\.","\\_",temp_names)
@@ -471,7 +474,7 @@ full_names_ord <- full_names[order(full_names$names.sequences.),]
 
 nrow(full_names_ord)
 
-#write.dna(sequences_ord, paste(ID_Folder, "/fasta_from_NCBI_ord.fasta", sep=""), format = "fasta", append = FALSE)
+write.dna(sequences, paste(ID_Folder, "/fasta_from_NCBI_ord.fasta", sep=""), format = "fasta", append = FALSE)
 
 length(unique(names(sequences_ord)))
 
@@ -484,6 +487,8 @@ for(i in 1:length(sequences_ord)) {
   names(temp) <- full_names_ord$SpStrain[i]
   GB_DNAstring <- c(GB_DNAstring,temp)
 } 
+
+#writeXStringSet(GB_DNAstring, file=paste(ID_Folder, "/GB_csv_extracted_not_trimmed.fasta", sep=""), append=FALSE, format="fasta") 
 
 #load(paste(sharedPath,"ITS/GB_DNAstring.Rdata", sep=""))
 
@@ -649,7 +654,7 @@ MaxV <- max(rowSums(dm), na.rm = TRUE)
 my_root <- which(rowSums(dm) == MaxV)
 # If this is a query sequence because of errors, this is a way to customize the choice based on GenBank number
 #
-# my_root <- grep("Phytopythium",rownames(align))
+#my_root <- grep("Phytopythium",rownames(align))
  
 #  dm <- dist.dna(align, model = "raw", pairwise.deletion = TRUE, as.matrix = TRUE)
   
@@ -660,7 +665,7 @@ my_root <- which(rowSums(dm) == MaxV)
   
 tree <- njs(dm)
 
-write.tree(tree, file = paste(ID_Folder, "/nj_tree.newick", sep=""), append = FALSE, digits = 15, tree.names = FALSE)
+#write.tree(tree, file = paste(ID_Folder, "/nj_tree.newick", sep=""), append = FALSE, digits = 15, tree.names = FALSE)
 #write.nexus(tree, file = paste(ID_Folder, "/nj_tree.nexus", sep=""))
 
   pdf(file = paste(ID_Folder, "/NJ_bionj_K80_tree_GenBank_and_ID_trimmed.pdf", sep=""), width = 8, height =64 )
