@@ -7,8 +7,8 @@ library("ape")
 
 
 # TO work on shared folder
-sharedPath   <- "/isilon/biodiversity/users/shared/Pythium_metagenomics/"
-ID_Folder <- paste(sharedPath,"Identification",sep="")
+sharedPath   <- "/isilon/biodiversity/users/shared/Phytophthora_ID/"
+ID_Folder <- paste(sharedPath,"Btubulin",sep="")
 setwd(sharedPath)
 getwd()
 
@@ -45,7 +45,7 @@ ID_fasta_files <- "for_analysis.fasta"
 # or pick the right file from a list 
 ID_fasta_files <- list.files(path = ID_Folder, pattern = "\\.fas$|\\.fasta$", recursive = FALSE)
 ID_fasta_files
-ID_fasta_files  <- ID_fasta_files[11]
+ID_fasta_files  <- ID_fasta_files[8]
 ID_fasta_files
 
 
@@ -131,7 +131,7 @@ fit <- hclust(dm, method="average")
 
 # Number of groups based on NJ tree
 
-num_clades <- 4
+num_clades <- 31
 
 groups <-  cutree(fit, num_clades)
 group2 <- data.frame(names(groups), groups, stringsAsFactors = FALSE)
@@ -300,7 +300,7 @@ outfmt_cols <- c("qseqid","sallacc","pident","length","mismatch","gapopen","qsta
 # colnames(GB_Blast_table) <- c("query id", "subject_ids", " %identity", "alignment length", "mismatches", "gap opens", "q.start", " q.end", "s.start", "s.end", "evalue", " bit_score")
 
 cmd2 <- paste("/opt/bio/ncbi-blast+/bin/blastn -db /isilon/biodiversity/reference/ncbi/blastdb/reference/nt/nt -query ",
-              ID_Folder, "/GenBank/fasta_for_GenBank.fasta -max_target_seqs 50 ", 
+              ID_Folder, "/GenBank/fasta_for_GenBank.fasta -max_target_seqs 100 ", 
 #              ID_Folder, "/GenBank/fasta_for_GenBank.fasta -max_target_seqs 50 -gilist ", ID_Folder, 
 #              "/GenBank/gilist.txt -gapopen 1 -gapextend 1 -xdrop_gap 30 -xdrop_gap_final 100 -dust no -outfmt '6 ", paste(outfmt_cols, collapse=" "), "' -out ",
 #              "/GenBank/gilist.txt -dust no -outfmt '6 ", paste(outfmt_cols, collapse=" "), "' -out ",
@@ -381,7 +381,7 @@ write.table(unique_GB, file = paste(ID_Folder,"/unique_GB.csv",sep=""), append =
 
 library(ape)
 
-source("/isilon/biodiversity/users/shared/Phytophthora_ID/read.GBxml.R")
+source("/home/AAFC-AAC/levesqueca/Read_GB_XML/Github_Read_GB_XML/read.GBxml.R")
 
 sequences <- read.GBxml(access.nb = unique_GB)
 
@@ -450,7 +450,7 @@ attr(sequences, "country")
 
 #sequences_ord[[1]]
 
-full_names <- data.frame(attr(sequences, "species"), names(sequences),  attr(sequences, "accession_num"), attr(sequences, "strain"), attr(sequences, "host"), attr(sequences, "country"), stringsAsFactors = FALSE)
+full_names <- data.frame(attr(sequences, "accession_num"), attr(sequences, "species"), names(sequences),   attr(sequences, "strain"), attr(sequences, "host"), attr(sequences, "country"), stringsAsFactors = FALSE)
 
 temp_names <-  do.call(paste, c(full_names[c(1,2,4,5,6)], sep="|"))
 #temp_names <-  do.call(paste, c(full_names[c(1,2,4)], sep="|"))
@@ -459,6 +459,7 @@ temp_names <- gsub(" ","_",temp_names)
 temp_names <- gsub("\\.","\\_",temp_names)
 temp_names <- gsub("\\/","\\_",temp_names)
 temp_names <- gsub("\\:","\\_",temp_names)
+temp_names <- gsub("'","",temp_names)
 temp_names <- gsub("\\;","\\_",temp_names)
 temp_names <- gsub("\\,","\\_",temp_names)
 temp_names <- gsub("\\-","\\_",temp_names)
@@ -575,7 +576,7 @@ query_length <- mean(nchar(fasta_for_GenBank$align_txt))
 
 
 library("chemometrics")
-SDX <- 5
+SDX <- 100
 Conf_interv <- SDX*sd_trim(width(x_trim), trim=0.05, const=FALSE)
 #show the sequences that will be removed
 to_remove <- x_trim[ ( width(x_trim) < query_length - 1*Conf_interv | width(x_trim) > query_length + 1*Conf_interv), ]
@@ -601,7 +602,7 @@ rm("sequences_ord")
 
 
 cmd2 <- paste("cat ",  ID_Folder, "/query_aligned_fasta.fasta ", ID_Folder, "/GB_csv_extracted.fasta > ",  ID_Folder, "/to_align.fasta", sep="")
-#cmd2 <- paste("cat ",  ID_Folder, "/my_sequences_with_metadata.fasta ", ID_Folder, "/GB_csv_extracted.fasta > ",  ID_Folder, "/to_align.fasta", sep="")
+#cmd2 <- paste("cat ",  ID_Folder, "/Oomycetes_ref_files_to_align.fasta ", ID_Folder, "/GB_csv_extracted.fasta > ",  ID_Folder, "/to_align.fasta", sep="")
 system(cmd2)
 
 
@@ -668,13 +669,13 @@ tree <- njs(dm)
 #write.tree(tree, file = paste(ID_Folder, "/nj_tree.newick", sep=""), append = FALSE, digits = 15, tree.names = FALSE)
 #write.nexus(tree, file = paste(ID_Folder, "/nj_tree.nexus", sep=""))
 
-  pdf(file = paste(ID_Folder, "/NJ_bionj_K80_tree_GenBank_and_ID_trimmed.pdf", sep=""), width = 8, height =64 )
+  pdf(file = paste(ID_Folder, "/NJ_bionj_K80_tree_GenBank_and_ID_trimmed.pdf", sep=""), width = 8, height =70 )
   # "0.5-((nrow(dm)-50)/500)" is a rough equation to remove 0.1 to cex factor for every 50 taxa to keep font size small enough for larger data
   # if you want to have longer branches, reduce x.lim by 0.1 increments
   #plot.phylo(type = "phylogram", root(tree, my_root[1], node = NULL, resolve.root = TRUE), font=1, cex = 0.5,  x.lim = 0.7)
   plot.phylo(type = "phylogram", root(tree, my_root[1], node = NULL, resolve.root = TRUE), font=1, 
-       #      cex = 0.1,  x.lim = 0.07 + max(dm, na.rm = TRUE)/1.3, edge.width= 1.1 - (nrow(dm)/2000), no.margin=TRUE)
-            cex = 0.54 - (sqrt(nrow(dm))/100),  x.lim = 0.07 + max(dm, na.rm = TRUE)/1.0, edge.width= 1.1 - (nrow(dm)/2500), no.margin=TRUE)
+      #      cex = 0.1,  x.lim = 0.07 + max(dm, na.rm = TRUE)/1.3, edge.width= 1.1 - (nrow(dm)/8000), no.margin=TRUE)
+           cex = 0.54 - (sqrt(nrow(dm))/100),  x.lim = 0.07 + max(dm, na.rm = TRUE)/1.0, edge.width= 1.1 - (nrow(dm)/2500), no.margin=TRUE)
             #cex = 0.54 - (sqrt(nrow(dm))/90),  x.lim = 0.07 + max(dm, na.rm = TRUE)/1.0, edge.width= 1.1 - (nrow(dm)/2000), no.margin=TRUE)
          # cex = 0.54 - (sqrt(nrow(dm))/70),  x.lim = 0.07 + max(dm, na.rm = TRUE)/1.3, edge.width= 1.1 - (nrow(dm)/1200), no.margin=TRUE)
   title(main="", outer=FALSE, cex.main=1, font.main=2)
